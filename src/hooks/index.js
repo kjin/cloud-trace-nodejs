@@ -19,6 +19,7 @@ var Module = require('module');
 var shimmer = require('shimmer');
 var path = require('path');
 var fs = require('fs');
+var Plugin = require('../trace-plugin-interface.js');
 
 //
 // All these operations need to be reversible
@@ -123,6 +124,14 @@ function activate(agent) {
 
   logger = agent.logger;
 
+  // Plugin stuff
+  var api = new Plugin(agent);
+  Object.keys(agent.plugins).forEach(function(pluginName) {
+    if (toInstrument[pluginName]) {
+      toInstrument[pluginName].file = agent.plugins[pluginName];
+    }
+  });
+
   checkLoadedModules(logger);
 
   // hook into Module._load so that we can hook into userspace frameworks
@@ -141,7 +150,7 @@ function activate(agent) {
           modulePatch[file].module = originalModuleLoad(loadPath, module, false);
         }
         if (modulePatch[file].patch !== undefined) {
-          modulePatch[file].patch(modulePatch[file].module);
+          modulePatch[file].patch(modulePatch[file].module, api);
         }
         if (modulePatch[file].intercept !== undefined) {
           modulePatch[file].module = modulePatch[file].intercept(modulePatch[file].module);
