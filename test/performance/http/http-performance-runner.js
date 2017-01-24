@@ -16,55 +16,41 @@
 
 'use strict';
 
-var common;
-var agent;
-if (process.argv[2] === '-i') {
-  process.env.GCLOUD_TRACE_ENABLED = true;
-  common = require('../../hooks/common.js');
-  agent = require('../../..').start();
-  // We want to drop all spans and avoid network ops
-  common.installNoopTraceWriter(agent);
-}
+require('../common.js');
 
-var http = require('http');
-var port = 8080;
-var N = 30000;
-var httpAgent = new http.Agent({maxSockets: 50});
+var run = require('../common.js');
+run(function(traceAgent, N, done) {
+  var http = require('http');
+  var port = 8080;
+  var httpAgent = new http.Agent({maxSockets: 50});
 
-var smileyServer = http.createServer(function(req, res) {
-  res.end(':)');
-});
-
-var runInTransaction = function(fn) {
-  common.runInTransaction(agent, function(end) {
-    end();
+  var smileyServer = http.createServer(function(req, res) {
+    res.end(':)');
   });
-};
 
-var work = function(endTransaction) {
-  var responses = 0;
+  var work = function() {
+    var responses = 0;
 
-  var start = process.hrtime();
-  for (var i = 0; i < N; ++i) {
-    http.get({port: port, agent: httpAgent, path: '/'}, function(res) {
-      res.resume();
-      res.on('end', function() {
-        if (++responses === N) {
-          smileyServer.close();
-          if (endTransaction) {
-            endTransaction();
+    var start = process.hrtime();
+    for (var i = 0; i < N; ++i) {
+      traceAgent.runInRootSpan({ name: 'outer' }, function(rootSpan) {
+        http.get({port: port, agent: httpAgent, path: '/'}, function(res) {
+          if (rootSpan) {
+            rootSpan.endSpan();
           }
+          res.resume();
+          res.on('end', function() {
+            if (++responses === N) {
+              smileyServer.close();
 
-          var diff = process.hrtime(start);
-          console.log((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); // ms.
-        }
+              var diff = process.hrtime(start);
+              done((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); // ms.
+            }
+          });
+        });
       });
-    });
-  }
-};
+    }
+  };
 
-if (agent) {
-  work = runInTransaction.bind(null, work);
-}
-
-smileyServer.listen(port, work);
+  smileyServer.listen(port, work);
+});

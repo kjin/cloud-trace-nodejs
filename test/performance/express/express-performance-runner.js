@@ -16,43 +16,35 @@
 
 'use strict';
 
-if (process.argv[2] === '-i') {
-  process.env.GCLOUD_TRACE_ENABLED = true;
-  process.env.GCLOUD_TRACE_EXCLUDE_HTTP = true;
-  var common = require('../../hooks/common.js');
-  var agent = require('../../..').start();
-  // We want to drop all spans and avoid network ops
-  common.installNoopTraceWriter(agent);
-}
+var run = require('../common.js');
+run(function(traceAgent, N, done) {
+  var express = require('express');
+  var http = require('http');
+  var path = '/';
+  var port = 8080;
+  var agent = new http.Agent({maxSockets: 50});
 
-var express = require('express');
-var http = require('http');
-var path = '/';
-var port = 8080;
-var N = 30000;
-var agent = new http.Agent({maxSockets: 50});
+  var app = express();
+  app.get(path, function(req, res) {
+    res.end(':)');
+  });
 
-var app = express();
-app.get(path, function(req, res) {
-  res.end(':)');
-});
+  var smileyServer = app.listen(port, function() {
+    var responses = 0;
 
-var smileyServer = app.listen(port, function() {
-  var responses = 0;
-
-  var start = process.hrtime();
-  for (var i = 0; i < N; ++i) {
-    http.get({port: port, agent: agent, path: path}, function(res) {
-      res.resume();
-      res.on('end', function() {
-        if (++responses === N) {
-          smileyServer.close();
-
-          var diff = process.hrtime(start);
-          console.log((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); //ms.
-        }
+    var start = process.hrtime();
+    for (var i = 0; i < N; ++i) {
+      http.get({port: port, agent: agent, path: path}, function(res) {
+        res.resume();
+        res.on('end', function() {
+          if (++responses === N) {
+            var diff = process.hrtime(start);
+            smileyServer.close(function() {
+              done((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); //ms.
+            });
+          }
+        });
       });
-    });
-  }
+    }
+  });
 });
-

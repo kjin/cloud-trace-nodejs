@@ -17,8 +17,38 @@
 'use strict';
 
 var assert = require('assert');
-var spawn = require('child_process').spawn;
+var fork = require('child_process').fork;
 var path = require('path');
+var minimist = require('minimist');
+var _ = require('lodash');
+var util = require('util');
+var config = require('../../config.js').trace;
+
+// write modes
+//   - none: trace-writer#write does nothing
+//   - mock: use nock to simulate api server with delay 'api-delay'
+//   - full: let runner contact api server directly
+var argv = minimist(process.argv.slice(2), {
+  default: {
+    'num-runs': 1,
+    'num-requests': 30000,
+    'api-delay': 0,
+    'write-mode': 'none'
+  }
+});
+if (!argv._.length === 0) {
+  console.log('Please specify framework to test: [express, http, mongo, restify]');
+  return;
+}
+
+var numRuns = argv['num-runs'];
+var testNames = argv._;
+
+var childArgs = {
+  numRequests: argv['num-requests'],
+  apiDelay: argv['api-delay'],
+  writeMode: argv['write-mode']
+};
 
 var tests = {
   http: 'http/http-performance-runner.js',
@@ -27,40 +57,55 @@ var tests = {
   restify: 'restify/restify-performance-runner.js'
 };
 
-if (process.argv.length < 3) {
-  console.log('Please specify framework to test: [express, http, mongo, restify]');
-  return;
+var results = {};
+// var next = function() {
+//   var percentSlower = (((times.instrumented / times.base) - 1) * 100).toFixed(1);
+//   console.log('Instrumented time was ' + percentSlower + '% slower',
+//         times.base, times.instrumented);
+// }
+// var next = function() {
+//   var difference = times.instrumented - times.base;
+//   console.log('Instrumented run incurred ' + difference / N + 'ms penalty ' +
+//     'per request', times.base, times.instrumented);
+// }
+var next = function() {
+  console.log(JSON.stringify(results));
+};
+
+function queueSpawn(testName, label, options) {
+  function queue() {
+    var prevNext = next;
+    next = function() {
+      var child = fork(path.join(__dirname, tests[testName]), [], {
+        // execArgv: ['--debug-brk']
+      });
+      setTimeout(function() {
+        child.send(options);
+        child.on('message', function (message) {
+          if (!results[testName]) {
+            results[testName] = {};
+          }
+          if (!results[testName][label]) {
+            results[testName][label] = [];
+          }
+          results[testName][label].push(message);
+        });
+        child.on('close', function (code) {
+          setTimeout(prevNext, 200);
+        });
+      }, 200);
+    };
+  }
+  for (var i = 0; i < numRuns; i++) {
+    queue();
+  }
 }
 
-var baseOut = '';
-var baseline = spawn('node', [path.join(__dirname, tests[process.argv[2]])]);
-baseline.stdout.on('data', function (data) {
-  baseOut += data;
-});
-baseline.stderr.on('data', function (data) {
-  assert.fail(data);
-});
-baseline.on('close', function (code) {
-  assert.equal(code, 0);
-  var patchedOut = '';
-  var instrumented = spawn('node', [path.join(__dirname, tests[process.argv[2]]),
-      '-i']);
-  instrumented.stdout.on('data', function (data) {
-    patchedOut += data;
-  });
-  instrumented.stderr.on('data', function (data) {
-    assert.fail(data);
-  });
-  instrumented.on('close', function (code) {
-    assert.equal(code, 0);
-    var baseTime = baseOut.trim().split('\n').pop();
-    var patchedTime = patchedOut.trim().split('\n').pop();
-    var percentSlower = (((patchedTime / baseTime) - 1) * 100).toFixed(1);
-    console.log('Instrumented time was ' + percentSlower + '% slower',
-        baseTime, patchedTime);
-    // TODO: add some real think time to the smiley server and lower the bound
-    // here.
-    assert(percentSlower < 200); // 200% slower!
-  });
-});
+for (var test of testNames) {
+  var filteredPlugins = { [test]: config.plugins[test] };
+  queueSpawn(test, 'base', _.assign({}, childArgs, { agent: false }));
+  queueSpawn(test, 'instrumented-sampled', _.assign({}, childArgs, { agent: true, config: { plugins: filteredPlugins } }));
+  queueSpawn(test, 'instrumented-sample-all', _.assign({}, childArgs, { agent: true, config: { samplingRate: 0, plugins: filteredPlugins } }));
+}
 
+next();

@@ -1,0 +1,12 @@
+{
+  "name": "trace-agent-perf",
+  "description": "For tracking performance overhead of using the Trace Agent",
+  "license": "See ../LICENSE",
+  "dependencies": {
+    "express": "^4.14.0",
+    "minimist": "^1.2.0",
+    "mongodb-core": "^2.1.6",
+    "mongoose": "^4.7.7",
+    "restify": "^4.3.0"
+  }
+}

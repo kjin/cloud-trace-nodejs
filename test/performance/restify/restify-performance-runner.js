@@ -16,21 +16,16 @@
 
 'use strict';
 
-if (process.argv[2] === '-i') {
-  process.env.GCLOUD_TRACE_ENABLED = true;
-  process.env.GCLOUD_TRACE_EXCLUDE_HTTP = true;
-  var common = require('../../hooks/common.js');
-  var agent = require('../../..').start();
-  // We want to drop all spans and avoid network ops
-  common.installNoopTraceWriter(agent);
-}
+require('../common.js');
 
 var restify = require('restify');
 var http = require('http');
 var path = '/';
 var port = 8080;
-var N = 30000;
 var agent = new http.Agent({maxSockets: 50});
+
+var argv = JSON.parse(process.argv[2]);
+var N = argv.numRequests;
 
 var app = restify.createServer();
 app.get(path, function(req, res) {
