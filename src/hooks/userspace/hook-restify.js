@@ -16,117 +16,69 @@
 
 'use strict';
 
-var cls = require('../../cls.js');
-var TraceLabels = require('../../trace-labels.js');
 var shimmer = require('shimmer');
-var semver = require('semver');
-var constants = require('../../constants.js');
-var agent;
 
 var SUPPORTED_VERSIONS = '<=4.x';
 
-// restify.createServer
-function createServerWrap(createServer) {
-  return function createServerTrace() {
-    var server = createServer.apply(this, arguments);
-    server.use(middleware);
-    return server;
-  };
-}
+function patchRestify(restify, api) {
+  shimmer.wrap(restify, 'createServer', createServerWrap);
 
-function middleware(req, res, next) {
-  var namespace = cls.getNamespace();
-  if (!namespace) {
-    agent.logger.info('Restify: no namespace found, ignoring request');
-    return next();
-  }
-  var traceHeader = agent.parseContextFromHeader(
-    req.header(constants.TRACE_CONTEXT_HEADER_NAME, null)) || {};
-  if (!agent.shouldTrace(req.url, traceHeader.options)) {
-    return next();
+  function createServerWrap(createServer) {
+    return function createServerTrace() {
+      var server = createServer.apply(this, arguments);
+      servers.use(middleware);
+      return server;
+    };
   }
 
-  namespace.bindEmitter(req);
-  namespace.bindEmitter(res);
-
-  var originalEnd = res.end;
-
-  namespace.run(function() {
-    var rootContext = startRootSpanForRequest(req, traceHeader);
-    var context = agent.generateTraceContext(rootContext, true);
-    if (context) {
-      res.header(constants.TRACE_CONTEXT_HEADER_NAME, context);
-    } else {
-      agent.logger.warn('restify: Attempted to generate trace context for nullSpan');
-    }
-
-    // wrap end
-    res.end = function(chunk, encoding) {
-      res.end = originalEnd;
-      var returned = res.end(chunk, encoding);
-
-      endRootSpanForRequest(rootContext, req, res);
-      return returned;
+  function middleware(req, res, next) {
+    var options = {
+      // we use the path part of the url as the span name and add the full url
+      // as a label later.
+      name: req.path,
+      url: req.url,
+      traceContext: req.header(api.constants.TRACE_CONTEXT_HEADER_NAME, null),
+      skipFrames: 3
     };
 
-    next();
-  });
-}
-
-/**
- * Creates and sets up a new root span for the given request.
- * @param {Object} req The request being processed.
- * @param {Object} traceHeader The incoming trace header.
- * @returns {!SpanData} The new initialized trace span data instance.
- */
-function startRootSpanForRequest(req, traceHeader) {
-  var traceId = traceHeader.traceId;
-  var parentSpanId = traceHeader.spanId;
-  var url = req.header('X-Forwarded-Proto', 'http') + '://' +
-    req.header('host') + req.url;
-
-  // we use the path part of the url as the span name and add the full
-  // url as a label
-  var rootContext = agent.createRootSpanData(req.path(), traceId, parentSpanId, 3);
-  rootContext.addLabel(TraceLabels.HTTP_METHOD_LABEL_KEY, req.method);
-  rootContext.addLabel(TraceLabels.HTTP_URL_LABEL_KEY, url);
-  rootContext.addLabel(TraceLabels.HTTP_SOURCE_IP, req.connection.remoteAddress);
-  return rootContext;
-}
-
-
-/**
- * Ends the root span for the given request.
- * @param {!SpanData} rootContext The trace context to close out.
- * @param {Object} req The request being processed.
- * @param {Object} res The response being processed.
- */
-function endRootSpanForRequest(rootContext, req, res) {
-  if (req.route && req.route.path) {
-    rootContext.addLabel(
-      'restify/request.route.path', req.route.path);
-  }
-  rootContext.addLabel(
-      TraceLabels.HTTP_RESPONSE_CODE_LABEL_KEY, res.statusCode);
-  rootContext.close();
-}
-
-module.exports = function(version_, agent_) {
-  if (!semver.satisfies(version_, SUPPORTED_VERSIONS)) {
-    agent_.logger.info('Restify: unsupported version ' + version_ + ' loaded');
-    return {};
-  }
-  return {
-    // An empty relative path here matches the root module being loaded.
-    '': {
-      patch: function(restify) {
-        agent = agent_;
-        shimmer.wrap(restify, 'createServer', createServerWrap);
-      },
-      unpatch: function(restify) {
-        shimmer.unwrap(restify, 'createServer');
-        agent_.logger.info('Restify: unpatched');
+    // TODO(ofrobots): can this be moved to the inner scope near the req.end
+    // clobber?
+    var originalEnd = res.end;
+    api.runInRootSpan(options, function(transaction) {
+      if (transaction) {
+        return next();
       }
-    }
-  };
-};
+
+      api.wrapEmitter(req);
+      api.wrapEmitter(res);
+
+      // Propagate the trace context to the response.
+      res.header(api.constants.TRACE_CONTEXT_HEADER_NAME,
+                 transaction.getTraceContext());
+
+      var fullUrl = req.header('X-Forwarded-Proto', 'http') + '://' +
+                    req.header('host') + req.url;
+      transaction.addLabel(api.labels.HTTP_METHOD_LABEL_KEY, req.method);
+      transaction.addLabel(api.labels.HTTP_URL_LABEL_KEY, fullUrl);
+      transaction.addLabel(api.labels.HTTP_SOURCE_IP,
+                           req.connection.remoteAddress);
+
+      res.end = function(chunk, encoding) {
+        res.end = originalEnd;
+        var returned = res.end(chunk, encoding);
+
+        if (req.route && req.route.path) {
+          transaction.addLabel('restify/request.route.path', req.route.path);
+        }
+        transaction.addLabel(api.labels.HTTP_RESPONSE_CODE_LABEL_KEY,
+                             res.statusCode);
+        transaction.endSpan();
+        return returned;
+      };
+
+      next();
+    });
+  }
+}
+
+module.exports = [{versions: SUPPORTED_VERSIONS, patch: patchRestify}];
