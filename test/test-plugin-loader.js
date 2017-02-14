@@ -36,18 +36,29 @@ var fakeModuleDirectory = '';
 // Adds module moduleName to the set of fake modules, using mock as the object
 // being "exported" by this module. In addition, providing version makes it
 // accessible by calling findModuleVersion.
-function addModuleMock(moduleName, version, mock) {
-  fakeModules[moduleName.replace('/', path.sep)] = {
+function addModuleMock(moduleName, version, mock, inDirectory) {
+  inDirectory = inDirectory || '';
+  if (!fakeModules[inDirectory]) {
+    fakeModules[inDirectory] = {};
+  }
+  fakeModules[inDirectory][moduleName.replace('/', path.sep)] = {
     exports: mock,
     version: version
   };
 }
 // Gets a mocked module. Doesn't have to be used in unit tests.
 function getModuleMock(modulePath) {
-  if (modulePath.startsWith(fakeModuleDirectory + path.sep)) {
-    modulePath = modulePath.slice(fakeModuleDirectory.length + 1);
+  var separatorIndex = modulePath.indexOf('#');
+  var moduleDirectory = '';
+  var moduleName = modulePath;
+  if (separatorIndex !== -1) {
+    moduleDirectory = modulePath.split('#')[0];
+    moduleName = modulePath.split('#')[1].replace('/', path.sep);
   }
-  return fakeModules[modulePath.replace('/', path.sep)] || {
+  if (fakeModules[moduleDirectory] && fakeModules[moduleDirectory][moduleName]) {
+    return fakeModules[moduleDirectory][moduleName];
+  }
+  return {
     exports: undefined,
     version: undefined
   };
@@ -56,8 +67,8 @@ function getModuleMock(modulePath) {
 // This allows us to simulate different versions of the same module being
 // require'd from different locations, and is only used in the test that shows
 // that the plugin loader can patch two versions of the same module.
-function setFakeModuleDirectory(dirName) {
-  fakeModuleDirectory = dirName || '';
+function setFakeModuleDirectory(moduleDirectory) {
+  fakeModuleDirectory = moduleDirectory || '';
 }
 
 // This function creates an object with just enough properties to appear to the
@@ -82,8 +93,9 @@ function createFakeAgent(plugins) {
 var proxyUtil = {
   findModulePath: function(request) {
     // In the real findModulePath, the resolved path of a module
-    // depends on 
-    return path.join(fakeModuleDirectory, request.replace('/', path.sep));
+    // depends on the directory of the file from which require() is called.
+    return (fakeModuleDirectory ? (fakeModuleDirectory + '#') : '') +
+      request.replace('/', path.sep);
   },
   findModuleVersion: function(modulePath) {
     return getModuleMock(modulePath).version;
@@ -125,28 +137,29 @@ describe('Trace Plugin Loader', function() {
   describe('Plugin Loader Test', function() {
     it('works properly', function() {
       addModuleMock('fake-module', '1.0.0', 'result');
+      addModuleMock('fake-module', '2.0.0', 'new-result', 'fake-parent');
+
       assert.strictEqual(require('fake-module'), 'result',
         'addModuleMock makes require() return mocked module');
       assert.strictEqual(proxyUtil.findModulePath('fake-module'), 'fake-module',
         'Stubbed findModulePath gives name of module when no module directory is set');
       assert.strictEqual(proxyUtil.findModuleVersion('fake-module'), '1.0.0',
-        'addModuleMock makes stubbed findModuleVersion return mocked ver. no.');
+        'addModuleMock makes stubbed findModuleVersion return mocked version no.');
+      
       setFakeModuleDirectory('fake-parent');
-      assert.strictEqual(require('fake-module'), 'result',
-        'setFakeModuleDirectory doesn\'t affect what require() returns');
-      assert.strictEqual(proxyUtil.findModulePath('fake-module'),
-        'fake-parent/fake-module',
-        'Stubbed findModulePath includes module directory in name when set');
-      assert.strictEqual(proxyUtil.findModuleVersion('fake-module'), '1.0.0',
-        'setFakeModuleDirectory doesn\'t affect stubbed findModuleVersion');
-      addModuleMock('fake-module', '2.0.0', 'new-result');
       assert.strictEqual(require('fake-module'), 'new-result',
-        'addModuleMock overwrites previous calls with same module name');
+        'setFakeModuleDirectory affects result of require()');
+      assert.strictEqual(proxyUtil.findModulePath('fake-module'),
+        'fake-parent#fake-module',
+        'Stubbed findModulePath includes module directory in name when set');
       assert.strictEqual(proxyUtil.findModuleVersion('fake-module'), '2.0.0',
-        'addModuleMock overwrites mocked version number');
+        'Switching to new directory yields new module version number');
+      
       setFakeModuleDirectory();
-      assert.strictEqual(proxyUtil.findModulePath('fake-module'), 'fake-module',
-        'setFakeModuleDirectory without arguments goes back to default behavior');
+      assert.strictEqual(require('fake-module'), 'result',
+        'Switching to original directory yields original module export');
+      assert.strictEqual(proxyUtil.findModuleVersion('fake-module'), '1.0.0',
+        'Switching to original directory yields original module version number');
     });
   });
 
@@ -311,7 +324,8 @@ describe('Trace Plugin Loader', function() {
   it('can patch multiple different versions of the same module', function() {
     var v1 = { getVersion: function() { return '1.0.0'; } };
     var v2 = { getVersion: function() { return '2.0.0'; } };
-    addModuleMock('module-h', '1.0.0', v1);
+    addModuleMock('module-h', '1.0.0', v1, 'somewhere');
+    addModuleMock('module-h', '2.0.0', v2, 'somewhere-else');
     addModuleMock('module-h-plugin', '', [
       {
         versions: '1.x',
@@ -338,18 +352,15 @@ describe('Trace Plugin Loader', function() {
     pluginLoader.activate(createFakeAgent({
       'module-h': 'module-h-plugin'
     }));
-    setFakeModuleDirectory('1');
+    setFakeModuleDirectory('somewhere');
     assert.strictEqual(require('module-h').getVersion(), '1.0.0 is ok',
       'Initial patch is correct');
-    setFakeModuleDirectory('2');
-    addModuleMock('module-h', '2.0.0', v2);
+    setFakeModuleDirectory('somehwere-else');
     assert.strictEqual(require('module-h').getVersion(), '2.0.0 is better',
       'Second loaded version is also patched');
-    setFakeModuleDirectory('1');
-    addModuleMock('module-h', '1.0.0', v1);
+    setFakeModuleDirectory('somewhere');
     assert.strictEqual(require('module-h').getVersion(), '1.0.0 is ok',
       'First loaded version doesn\'t get patched again');
-    setFakeModuleDirectory('');
   });
 
   /**
