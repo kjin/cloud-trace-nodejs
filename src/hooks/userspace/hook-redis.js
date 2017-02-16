@@ -51,17 +51,17 @@ function streamListenersWrap(api, install_stream_listeners) {
 }
 
 function setupSpan(api, cmd, args, skipped_frames) {
-  var labels = { command: cmd };
-  if (api.enhancedDatabaseReportingEnabled()) {
-    labels.arguments = JSON.stringify(args);
-  }
   var span = api.createChildSpan({
     name: 'redis-' + cmd,
     skipFrames: skipped_frames + 1
   });
-  Object.keys(labels).forEach(function(key) {
-    span.addLabel(key, labels[key]);
-  });
+  if (!span) {
+    return null;
+  }
+  span.addLabel('command', cmd);
+  if (api.enhancedDatabaseReportingEnabled()) {
+    span.addLabel('arguments', JSON.stringify(args));
+  }
   return span;
 }
 
@@ -77,17 +77,19 @@ function startSpanFromArguments(api, cmd, args, cb, send_command) {
     }
   }
   var span = setupSpan(api, cmd, args, 1);
+  if (!span) {
+    return send_command(cmd, args, cb);
+  }
   return send_command(cmd, args, wrapCallback(api, span, cb));
 }
 
 function internalSendCommandWrap(api, internal_send_command) {
   return function internal_send_command_trace(cmd, args, cb) {
-    var root = api.getTransaction();
-    if (!root) {
-      return internal_send_command.call(this, cmd, args, cb);
-    }
     if (arguments.length === 1 && typeof cmd === 'object') {
       var span = setupSpan(api, cmd.command, cmd.args, 0);
+      if (!span) {
+        return internal_send_command.call(this, cmd, args, cb);
+      }
       cmd.callback = wrapCallback(api, span, cmd.callback);
       return internal_send_command.call(this, cmd);
     }
@@ -97,28 +99,20 @@ function internalSendCommandWrap(api, internal_send_command) {
 
 function sendCommandWrap(api, send_command) {
   return function send_command_trace(cmd, args, cb) {
-    var root = api.getTransaction();
-    if (!root) {
-      return send_command.call(this, cmd, args, cb);
-    }
     return startSpanFromArguments(api, cmd, args, cb, send_command.bind(this));
   };
 }
 
 function wrapCallback(api, span, done) {
   var fn = function(err, res) {
-    var labels = {};
     if (api.enhancedDatabaseReportingEnabled()) {
       if (err) {
-        labels.error = err;
+        span.addLabel('error', err);
       }
       if (res) {
-        labels.result = res;
+        span.addLabel('result', res);
       }
     }
-    Object.keys(labels).forEach(function(key) {
-      span.addLabel(key, labels[key]);
-    });
     span.endSpan();
     if (done) {
       done(err, res);
@@ -127,72 +121,91 @@ function wrapCallback(api, span, done) {
   return api.wrap(fn);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-// patches for verions < 2.6
-function patchBelowV2_6(redis, api) {
-  shimmer.wrap(redis.RedisClient.prototype, 'send_command',
-    sendCommandWrap.bind(null, api));
-}
-
-function patchEqualV2_6(redis, api) {
+function wrapInternalSendCommand(redis, api) {
   shimmer.wrap(redis.RedisClient.prototype, 'internal_send_command',
-    internalSendCommandWrap.bind(null, api));
+               internalSendCommandWrap.bind(null, api));
 }
 
-// patches for versions < 2.3.x
-function patchBelowV2_3(redis, api) {
-  // The same action is done for versions <= 2.3.x
-  patchEqualV2_3(redis, api);
+function unwrapInternalSendCommand(redis) {
+  shimmer.unwrap(redis.RedisClient.prototype, 'internal_send_command');
 }
 
-function patchEqualV2_3(redis, api) {
-  shimmer.wrap(redis.RedisClient.prototype, 'install_stream_listeners',
-          streamListenersWrap.bind(null, api));
-}
-
-function patchAboveV2_3(redis, api) {
-  shimmer.wrap(redis.RedisClient.prototype, 'create_stream',
-          createStreamWrap.bind(null, api));
-}
-
-function patchAll(redis, api) {
+function wrapCreateClient(redis, api) {
   shimmer.wrap(redis, 'createClient', createClientWrap.bind(null, api));
+}
+
+function unwrapCreateClient(redis) {
+  shimmer.unwrap(redis, 'createClient');
+}
+
+function wrapCreateStream(redis, api) {
+  shimmer.wrap(redis.RedisClient.prototype, 'create_stream',
+               createStreamWrap.bind(null, api));
+}
+
+function unwrapCreateStream(redis) {
+  shimmer.unwrap(redis.RedisClient.prototype, 'create_stream');
+}
+
+function wrapSendCommand(redis, api) {
+  shimmer.wrap(redis.RedisClient.prototype, 'send_command',
+               sendCommandWrap.bind(null, api));
+}
+
+function unwrapSendCommand(redis) {
+  shimmer.unwrap(redis.RedisClient.prototype, 'send_command');
+}
+
+function wrapInstallStreamListeners(redis, api) {
+  shimmer.wrap(redis.RedisClient.prototype, 'install_stream_listeners',
+               streamListenersWrap.bind(null, api));
+}
+
+function unwrapInstallStreamListeners(redis) {
+  shimmer.unwrap(redis.RedisClient.prototype, 'install_stream_listeners');
 }
 
 module.exports = [
   {
     file: '',
-    versions: '<2.3.x',
+    versions: '2.6',
     patch: function(redis, api) {
-      patchBelowV2_6(redis, api);
-      patchAll(redis, api);
-    }
-  },
-  {
-    file: '',
-    versions: '2.3.x',
-    patch: function(redis, api) {
-      patchBelowV2_6(redis, api);
-      patchEqualV2_3(redis, api);
-      patchAll(redis, api);
+      wrapCreateStream(redis, api);
+      wrapInternalSendCommand(redis, api);
+      wrapCreateClient(redis, api);
+    },
+    unpatch: function(redis) {
+      unwrapCreateStream(redis);
+      unwrapInternalSendCommand(redis);
+      unwrapCreateClient(redis);
     }
   },
   {
     file: '',
     versions: '>2.3.x <2.6',
     patch: function(redis, api) {
-      patchAboveV2_3(redis, api);
-      patchBelowV2_6(redis, api);
-      patchAll(redis, api);
+      wrapSendCommand(redis, api);
+      wrapCreateStream(redis, api);
+      wrapCreateClient(redis, api);
+    },
+    unpatch: function(redis) {
+      unwrapSendCommand(redis);
+      unwrapCreateStream(redis);
+      unwrapCreateClient(redis);
     }
   },
   {
     file: '',
-    versions: '2.6.x',
+    versions: '<=2.3.x',
     patch: function(redis, api) {
-      patchEqualV2_6(redis, api);
-      patchAll(redis, api);
+      wrapSendCommand(redis, api);
+      wrapInstallStreamListeners(redis, api);
+      wrapCreateClient(redis, api);
+    },
+    unpatch: function(redis) {
+      unwrapSendCommand(redis);
+      unwrapInstallStreamListeners(redis);
+      unwrapCreateClient(redis);
     }
   }
 ];
