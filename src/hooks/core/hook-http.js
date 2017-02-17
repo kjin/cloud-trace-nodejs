@@ -20,95 +20,117 @@ var url = require('url');
 var isString = require('is').string;
 var merge = require('lodash.merge');
 var httpAgent = require('_http_agent');
+var TRACE_AGENT_REQUEST_HEADER = require('../constants.js').TRACE_AGENT_REQUEST_HEADER;
 
-function requestWrap(api, request) {
-  var labels = api.labels;
-  function setTraceHeader(parsedOptions, context) {
-    if (context) {
-      return merge(parsedOptions, {
-        headers: {
-          [TraceLabels.TRACE_CONTEXT_HEADER_NAME]: context
-        }
-      });
+function isTraceAgentRequest (options) {
+  return options && options.headers &&
+    !!options.headers[TRACE_AGENT_REQUEST_HEADER];
+}
+
+function getSpanName(requestOptions) {
+  if (isString(requestOptions)) {
+    requestOptions = url.parse(requestOptions);
+  }
+  // c.f. _http_client.js ClientRequest constructor
+  return requestOptions.hostname || requestOptions.host || 'localhost';
+}
+
+function setTraceHeader(parsedOptions, context, api) {
+  if (context) {
+    return merge(parsedOptions, {
+      headers: {
+        [api.labels.TRACE_CONTEXT_HEADER_NAME]: context
+      }
+    });
+  }
+  return parsedOptions;
+}
+
+function extractUrl(parsedOptions) {
+  var uri = parsedOptions;
+  var agent = parsedOptions._defaultAgent || httpAgent.globalAgent;
+  return isString(uri) ? uri :
+    (parsedOptions.protocol || agent.protocol) + '//' +
+    (parsedOptions.hostname || parsedOptions.host || 'localhost') +
+    ((isString(parsedOptions.port) ? (':' + parsedOptions.port) : '')) +
+    (parsedOptions.path || parsedOptions.pathName || '/');
+}
+
+function parseRequestOptions(requestOptions) {
+  return isString(requestOptions) ?
+    merge({headers: {}}, url.parse(requestOptions)) :
+    merge({headers: {}}, requestOptions);
+}
+
+function patchedHTTPRequest(requestOptions, callback, request, api) {
+  if (!requestOptions) {
+    return request.call(request, requestOptions, callback);
+  } else if (isTraceAgentRequest(requestOptions)) {
+    return request.call(request, requestOptions, callback);
+  } else if (!api.getRootSpan()) {
+    if (isString(requestOptions)) {
+      requestOptions = url.parse(requestOptions);
     }
-    return parsedOptions;
+    // What's the new logger target?
+    // console.log('Untraced http uri:', extractUrl(requestOptions));
+    return request.call(request, requestOptions, callback);
   }
-  function parseRequestOptions(requestOptions) {
-    return isString(requestOptions) ?
-      merge(url.parse(requestOptions), {headers: {}}) :
-      merge({headers: {}}, requestOptions);
+  var parsedOptions = parseRequestOptions(requestOptions);
+  var uri = extractUrl(parsedOptions);
+  var requestLifecycleSpan = api.createChildSpan({name: getSpanName(parsedOptions)});
+  if (!requestLifecycleSpan) {
+    // Bail out since we couldn't get a span
+    return request.call(request, requestOptions, callback);
   }
-  function extractUrl(parsedOptions) {
-    var uri = parsedOptions;
-    var agent = parsedOptions._defaultAgent || httpAgent.globalAgent;
-    return isString(uri) ? uri :
-      (parsedOptions.protocol || agent.protocol) + '//' +
-      (parsedOptions.hostname || parsedOptions.host || 'localhost') +
-      ((isString(parsedOptions.port) ? (':' + parsedOptions.port) : '')) +
-      (parsedOptions.path || parseRequestOptions.pathName || '/');
-  }
-  function getSpanName(requestOptions) {
-    if (isString(options)) {
-      options = url.parse(requestOptions);
-    }
-    // c.f. _http_client.js ClientRequest constructor
-    return options.hostname || options.host || 'localhost';
-  }
-  function patchedHTTPRequest(requestOptions, callback, request) {
-    var parsedOptions = parseRequestOptions(requestOptions);
-    var uri = extractUrl(parsedOptions);
-    var requestLifecycleSpan = api.createChildSpan({name: 'http', url: uri})
-      .addLabel(api.labels.HTTP_METHOD_LABEL_KEY, parsedOptions.method)
-      .addLabel(api.labels.HTTP_URL_LABEL_KEY, uri);
-    parsedOptions = setTraceHeader(parsedOptions, transaction.getTraceContext());
-    var req = request.call(request, requestOptions, function (res) {
-      api.wrapEmitter(res);
-      var numBytes = 0;
-      res.on('data', function (chunk) {
-        numBytes += chunk.length;
-      });
-      res.on('end', function () {
+  requestLifecycleSpan.addLabel(api.labels.HTTP_METHOD_LABEL_KEY,
+    parsedOptions.method || 'GET');
+  requestLifecycleSpan.addLabel(api.labels.HTTP_URL_LABEL_KEY, uri);
+  parsedOptions = setTraceHeader(parsedOptions, requestLifecycleSpan.getTraceContext(), api);
+  var req = request.call(request, parsedOptions, function (res) {
+    api.wrapEmitter(res);
+    var numBytes = 0;
+    res.on('data', function (chunk) {
+      numBytes += chunk.length;
+    });
+    res.on('end', function () {
+      if (requestLifecycleSpan) {
         requestLifecycleSpan
           .addLabel(api.labels.HTTP_RESPONSE_SIZE_LABEL_KEY, numBytes);
         requestLifecycleSpan
           .addLabel(api.labels.HTTP_RESPONSE_CODE_LABEL_KEY, res.statusCode);
-        requestAnimationFrame.endSpan();
-      });
-      if (callback) {
-        return callback(res);
+        requestLifecycleSpan.endSpan();
       }
     });
-    api.wrapEmitter(req);
-    req.on('error', function (e) {
-      var labels = {};
-      if (e) {
-        requestLifecycleSpan.addLabel(TraceLabels.ERROR_DETAILS_NAME, e.name);
-        requestLifecycleSpan
-          .addLabel(TraceLabels.ERROR_DETAILS_MESSAGE, e.message);
-      } else {
-        console.error('HTTP request error was null or undefined');
-      }
+    if (callback) {
+      return callback(res);
+    }
+  });
+  api.wrapEmitter(req);
+  req.on('error', function (e) {
+    if (e && requestLifecycleSpan) {
+      requestLifecycleSpan.addLabel(api.labels.ERROR_DETAILS_NAME, e.name);
+      requestLifecycleSpan
+        .addLabel(api.labels.ERROR_DETAILS_MESSAGE, e.message);
       requestLifecycleSpan.endSpan();
-    });
-    return req;
-  }
-  return function (options, callback) {
-    return function () {
-      if (!this._google_trace_patched && options) {
-        // Don't keep wrapping our same request
-        this._google_trace_patched = true;
-        return patchedHTTPRequest(options, callback, request);
-      }
-      return request.apply(this, arguments);
-    };
-  };
+    } else if (!e) {
+      // What's the new logger target?
+      // console.error('HTTP request error was null or undefined', e);
+    }
+  });
+  return req;
 }
 
 module.exports = [
   {
     file: 'http',
     patch: function (http, api) {
-      shimmer.wrap(http, 'request', requestWrap.bind(null, api, http.request));
+      ['request'].forEach(function (methodName) {
+        shimmer.wrap(http, methodName, function (originalMethod) {
+          return function (options, callback) {
+            return patchedHTTPRequest(options, callback, originalMethod, api);
+          };
+        });
+      });
     }
   }
 ];
