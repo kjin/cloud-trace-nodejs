@@ -16,38 +16,35 @@
 
 'use strict';
 
-require('../common.js');
+var run = require('../common.js');
+run(function(traceAgent, N, done) {
+  var restify = require('restify');
+  var http = require('http');
+  var path = '/';
+  var port = 8080;
+  var agent = new http.Agent({maxSockets: 50});
 
-var restify = require('restify');
-var http = require('http');
-var path = '/';
-var port = 8080;
-var agent = new http.Agent({maxSockets: 50});
+  var app = restify.createServer();
+  app.get(path, function(req, res) {
+    res.end(':)');
+  });
 
-var argv = JSON.parse(process.argv[2]);
-var N = argv.numRequests;
+  var smileyServer = app.listen(port, function() {
+    var responses = 0;
 
-var app = restify.createServer();
-app.get(path, function(req, res) {
-  res.end(':)');
-});
+    var start = process.hrtime();
+    for (var i = 0; i < N; ++i) {
+      http.get({port: port, agent: agent, path: path}, function(res) {
+        res.resume();
+        res.on('end', function() {
+          if (++responses === N) {
+            smileyServer.close();
 
-var smileyServer = app.listen(port, function() {
-  var responses = 0;
-
-  var start = process.hrtime();
-  for (var i = 0; i < N; ++i) {
-    http.get({port: port, agent: agent, path: path}, function(res) {
-      res.resume();
-      res.on('end', function() {
-        if (++responses === N) {
-          smileyServer.close();
-
-          var diff = process.hrtime(start);
-          console.log((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); //ms.
-        }
+            var diff = process.hrtime(start);
+            done((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); //ms.
+          }
+        });
       });
-    });
-  }
+    }
+  });
 });
-

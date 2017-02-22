@@ -41,10 +41,10 @@ module.exports = function run(fn) {
         });
     }
 
-    var numRequests = 0;
+    var numSampled = 0;
 
     function done(time) {
-      var result = { time: time, numRequests: numRequests };
+      var result = { time: time, percentSampled: numSampled / options.numRequests };
       if (process.send) {
         process.send(result);
         process.disconnect();
@@ -58,15 +58,23 @@ module.exports = function run(fn) {
     if (options.agent) {
       agent = trace.start(options.config || {});
       var privateAgent = agent.private_();
-      if (options.writeMode === 'mock') {
-        nock.disableNetConnect();
-        nock.enableNetConnect(/localhost/);
-        setNock(privateAgent.config_.projectId, options.apiDelay);
-        setAuthNock();
-      } else if (options.writeMode === 'none') {
+      if (options.writeMode === 'none') {
         // We want to drop all spans and avoid network ops
         privateAgent.traceWriter.writeSpan = function(spanData) {
-          numRequests++;
+          numSampled++;
+        };
+      } else {
+        if (options.writeMode === 'mock') {
+          nock.disableNetConnect();
+          nock.enableNetConnect(/localhost/);
+          setNock(privateAgent.config_.projectId, options.apiDelay);
+          setAuthNock();
+        }
+        // We still want to count how many samples were taken
+        var originalWriteSpan = privateAgent.traceWriter.writeSpan;
+        privateAgent.traceWriter.writeSpan = function(spanData) {
+          numSampled++;
+          return originalWriteSpan.apply(this, arguments);
         };
       }
     } else {

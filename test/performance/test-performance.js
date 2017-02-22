@@ -30,8 +30,8 @@ var config = require('../../config.js').trace;
 //   - full: let runner contact api server directly
 var argv = minimist(process.argv.slice(2), {
   default: {
-    'num-runs': 1,
-    'num-requests': 30000,
+    'num-runs': 10,
+    'num-requests': 3000,
     'api-delay': 0,
     'write-mode': 'none'
   }
@@ -58,24 +58,27 @@ var tests = {
 };
 
 var results = {};
-// var next = function() {
-//   var percentSlower = (((times.instrumented / times.base) - 1) * 100).toFixed(1);
-//   console.log('Instrumented time was ' + percentSlower + '% slower',
-//         times.base, times.instrumented);
-// }
-// var next = function() {
-//   var difference = times.instrumented - times.base;
-//   console.log('Instrumented run incurred ' + difference / N + 'ms penalty ' +
-//     'per request', times.base, times.instrumented);
-// }
 var next = function() {
-  console.log(JSON.stringify(results));
+  for (var test in results) {
+    for (var label in results[test]) {
+      var length = results[test][label].raw.length;
+      results[test][label].mean = results[test][label].raw.reduce(function(previousValue, currentValue) {
+        return {
+          time: previousValue.time + currentValue.time / length,
+          percentSampled: previousValue.numSampled + currentValue.numSampled / length
+        };
+      }, { time: 0, percentSampled: 0 });
+      delete results[test][label].raw;
+    }
+  }
+  console.log(JSON.stringify(results, null, 2));
 };
 
 function queueSpawn(testName, label, options) {
   function queue() {
     var prevNext = next;
     next = function() {
+      console.log('--- Running ' + testName + ' with config ' + label);
       var child = fork(path.join(__dirname, tests[testName]), [], {
         // execArgv: ['--debug-brk']
       });
@@ -86,9 +89,9 @@ function queueSpawn(testName, label, options) {
             results[testName] = {};
           }
           if (!results[testName][label]) {
-            results[testName][label] = [];
+            results[testName][label] = { raw: [] };
           }
-          results[testName][label].push(message);
+          results[testName][label].raw.push(message);
         });
         child.on('close', function (code) {
           setTimeout(prevNext, 200);

@@ -22,72 +22,57 @@
 // Run a mongo image binding the mongo port
 //   ex) docker run -p 27017:27017 -d mongo
 
-require('../common.js');
+var run = require('../common.js');
+run(function(traceAgent, N, done) {
+  var mongoose = require('mongoose');
+  var Schema = mongoose.Schema;
 
-var traceAgent = require('../../..').private_();
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-
-var argv = JSON.parse(process.argv[2]);
-var N = argv.numRequests;
-
-var simpleSchema = new Schema({
-  f1: String,
-  f2: Boolean,
-  f3: Number
-});
-
-var Simple = mongoose.model('Simple', simpleSchema);
-
-var sim = new Simple({
-  f1: 'sim',
-  f2: true,
-  f3: 42
-});
-
-var runInTransaction = function(fn) {
-  var cls = require('../../../src/cls.js');
-  cls.getNamespace().run(function() {
-    var span = traceAgent.createRootSpanData('outer');
-    fn(function() {
-      span.close();
-    });
+  var simpleSchema = new Schema({
+    f1: String,
+    f2: Boolean,
+    f3: Number
   });
-};
 
-var work = function(endTransaction) {
-  var responses = 0;
+  var Simple = mongoose.model('Simple', simpleSchema);
 
-  mongoose.connect('mongodb://localhost:27017/testdb', function(err) {
-    if (err) {
-      console.log('Skipping: no mongo server found at localhost:27017.');
-      process.exit(0);
-    }
-    var start = process.hrtime();
-    var saveWork = function(err) {
-      Simple.findOne({f1: 'sim'}, function(err, res) {
-        if (++responses === N) {
-          mongoose.connection.db.dropDatabase(function(err) {
-            mongoose.connection.close(function(err) {
-              if (endTransaction) {
-                endTransaction();
+  var sim = new Simple({
+    f1: 'sim',
+    f2: true,
+    f3: 42
+  });
+
+  var work = function() {
+    var responses = 0;
+
+    mongoose.connect('mongodb://localhost:27017/testdb', function(err) {
+      if (err) {
+        console.log('Skipping: no mongo server found at localhost:27017.');
+        process.exit(0);
+      }
+      var start = process.hrtime();
+      for (var i = 0; i < N; ++i) {
+        traceAgent.runInRootSpan({ name: 'outer' }, function(rootSpan) {
+          function saveWork(err) {
+            Simple.findOne({f1: 'sim'}, function(err, res) {
+              if (rootSpan) {
+                rootSpan.endSpan();
               }
+              if (++responses === N) {
+                mongoose.connection.db.dropDatabase(function(err) {
+                  mongoose.connection.close(function(err) {
 
-              var diff = process.hrtime(start);
-              console.log((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); // ms.
+                    var diff = process.hrtime(start);
+                    done((diff[0] * 1e3 + diff[1] / 1e6).toFixed()); // ms.
+                  });
+                });
+              }
             });
-          });
-        }
-      });
-    };
-    for (var i = 0; i < N; ++i) {
-      sim.save(saveWork);
-    }
-  });
-};
+          }
+          sim.save(saveWork);
+        });
+      }
+    });
+  };
 
-if (traceAgent) {
-  work = runInTransaction.bind(null, work);
-}
-
-work();
+  work();
+});

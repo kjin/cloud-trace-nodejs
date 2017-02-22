@@ -16,8 +16,6 @@
 
 'use strict';
 
-require('../common.js');
-
 var run = require('../common.js');
 run(function(traceAgent, N, done) {
   var http = require('http');
@@ -35,10 +33,14 @@ run(function(traceAgent, N, done) {
     for (var i = 0; i < N; ++i) {
       traceAgent.runInRootSpan({ name: 'outer' }, function(rootSpan) {
         http.get({port: port, agent: httpAgent, path: '/'}, function(res) {
+          var buffer = '';
           if (rootSpan) {
             rootSpan.endSpan();
           }
           res.resume();
+          res.on('data', function(data) {
+            buffer += data;
+          });
           res.on('end', function() {
             if (++responses === N) {
               smileyServer.close();
