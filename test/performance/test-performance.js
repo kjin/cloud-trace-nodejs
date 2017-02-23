@@ -37,14 +37,20 @@ var tests = {
   restify: 'restify/restify-performance-runner.js'
 };
 
+var configurations = {
+  'base': { enabled: false },
+  'instrumented-sampled': {},
+  'instrumented-sample-all': { samplingRate: 0 }
+};
+
 // write modes
 //   - none: trace-writer#write does nothing
 //   - mock: use nock to simulate api server with delay 'api-delay'
 //   - full: let runner contact api server directly (we likely never want this)
 var argv = minimist(process.argv.slice(2), {
   default: {
-    'num-runs': 30,
-    'num-requests': 30000,
+    'num-runs': 5,
+    'num-requests': 3000,
     'api-delay': 0,
     'write-mode': 'none'
   }
@@ -57,6 +63,7 @@ if (!argv._.length === 0) {
 
 var numRuns = argv['num-runs'];
 var testNames = argv._;
+var configNames = Object.keys(configurations);
 
 var childArgs = {
   numRequests: argv['num-requests'],
@@ -67,25 +74,25 @@ var childArgs = {
 var results = {};
 var next = function() {
   for (var test in results) {
-    for (var label in results[test]) {
-      var length = results[test][label].raw.length;
-      results[test][label].mean = results[test][label].raw.reduce(function(previousValue, currentValue) {
+    for (var config in results[test]) {
+      var length = results[test][config].raw.length;
+      results[test][config].mean = results[test][config].raw.reduce(function(previousValue, currentValue) {
         return {
           time: previousValue.time + currentValue.time / length,
-          percentSampled: previousValue.numSampled + currentValue.numSampled / length
+          percentSampled: previousValue.percentSampled + currentValue.percentSampled / length
         };
       }, { time: 0, percentSampled: 0 });
-      delete results[test][label].raw;
+      delete results[test][config].raw;
     }
   }
   console.log(JSON.stringify(results, null, 2));
 };
 
-function queueSpawn(testName, label, options) {
+function queueSpawn(testName, configName, options) {
   function queue() {
     var prevNext = next;
     next = function() {
-      console.log('--- Running ' + testName + ' with config ' + label);
+      console.log('--- Running ' + testName + ' with config ' + configName);
       var child = fork(path.join(__dirname, tests[testName]), [], {
         // execArgv: ['--debug-brk']
       });
@@ -95,10 +102,10 @@ function queueSpawn(testName, label, options) {
           if (!results[testName]) {
             results[testName] = {};
           }
-          if (!results[testName][label]) {
-            results[testName][label] = { raw: [] };
+          if (!results[testName][configName]) {
+            results[testName][configName] = { raw: [] };
           }
-          results[testName][label].raw.push(message);
+          results[testName][configName].raw.push(message);
         });
         child.on('close', function (code) {
           setTimeout(prevNext, 200);
@@ -112,10 +119,12 @@ function queueSpawn(testName, label, options) {
 }
 
 for (var test of testNames) {
-  var filteredPlugins = { [test]: config.plugins[test] };
-  queueSpawn(test, 'base', _.assign({}, childArgs, { agent: false }));
-  queueSpawn(test, 'instrumented-sampled', _.assign({}, childArgs, { agent: true, config: { plugins: filteredPlugins } }));
-  queueSpawn(test, 'instrumented-sample-all', _.assign({}, childArgs, { agent: true, config: { samplingRate: 0, plugins: filteredPlugins } }));
+  var filteredPluginConfig = { plugins: { [test]: config.plugins[test] } };
+  for (var config of configNames) {
+    queueSpawn(test, config, _.assign({}, childArgs, {
+      config: _.assign({}, filteredPluginConfig, configurations[config])
+    }));
+  }
 }
 
 next();

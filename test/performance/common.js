@@ -68,33 +68,30 @@ module.exports = function run(fn) {
       nock.cleanAll();
     }
 
-    var agent;
-    if (options.agent) {
-      agent = trace.start(options.config || {});
-      var privateAgent = agent.private_();
+    var traceApi = trace.start(options.config || {});
+    var agent = traceApi.private_();
+    if (agent) {
       if (options.writeMode === 'none') {
         // We want to drop all spans and avoid network ops
-        privateAgent.traceWriter.writeSpan = function(spanData) {
+        agent.traceWriter.writeSpan = function(spanData) {
           numSampled++;
         };
       } else {
         if (options.writeMode === 'mock') {
           nock.disableNetConnect();
           nock.enableNetConnect(/localhost/);
-          setNock(privateAgent.config_.projectId, options.apiDelay);
+          setNock(agent.config_.projectId, options.apiDelay);
           setAuthNock();
         }
         // We still want to count how many samples were taken.
-        var originalWriteSpan = privateAgent.traceWriter.writeSpan;
-        privateAgent.traceWriter.writeSpan = function(spanData) {
+        var originalWriteSpan = agent.traceWriter.writeSpan;
+        agent.traceWriter.writeSpan = function(spanData) {
           numSampled++;
           return originalWriteSpan.apply(this, arguments);
         };
       }
-    } else {
-      agent = trace.start({ enabled: false });
     }
 
-    fn(agent, options.numRequests, done);
+    fn(traceApi, options.numRequests, done);
   }
 };
