@@ -24,20 +24,34 @@ var _ = require('lodash');
 var util = require('util');
 var config = require('../../config.js').trace;
 
+/**
+ * This file represents a benchmarking harness. It runs one or more benchmarks
+ * a number of times and retrieves its average running time.
+ */
+
+// All available tests
+var tests = {
+  http: 'http/http-performance-runner.js',
+  express: 'express/express-performance-runner.js',
+  mongo: 'mongo/mongo-performance-runner.js',
+  restify: 'restify/restify-performance-runner.js'
+};
+
 // write modes
 //   - none: trace-writer#write does nothing
 //   - mock: use nock to simulate api server with delay 'api-delay'
-//   - full: let runner contact api server directly
+//   - full: let runner contact api server directly (we likely never want this)
 var argv = minimist(process.argv.slice(2), {
   default: {
-    'num-runs': 10,
-    'num-requests': 3000,
+    'num-runs': 30,
+    'num-requests': 30000,
     'api-delay': 0,
     'write-mode': 'none'
   }
 });
 if (!argv._.length === 0) {
-  console.log('Please specify framework to test: [express, http, mongo, restify]');
+  console.log('Please specify at least one framework to test: [' +
+    Object.keys(tests).join(', ') + ']');
   return;
 }
 
@@ -48,13 +62,6 @@ var childArgs = {
   numRequests: argv['num-requests'],
   apiDelay: argv['api-delay'],
   writeMode: argv['write-mode']
-};
-
-var tests = {
-  http: 'http/http-performance-runner.js',
-  express: 'express/express-performance-runner.js',
-  mongo: 'mongo/mongo-performance-runner.js',
-  restify: 'restify/restify-performance-runner.js'
 };
 
 var results = {};
