@@ -1,21 +1,35 @@
 var nock = require('nock');
 var trace = require('../..');
 
-var DEFAULT_NUM_REQUESTS = 300000;
+var DEFAULT_NUM_REQUESTS = 30000;
 
+/**
+ * Starts the trace agent and runs a function that represents a benchmark,
+ * passing it three things:
+ * - The trace agent itself
+ * - The number of requests to make
+ * - A callback
+ * When the benchmark is finished, it should call the callback with the time
+ * it took in milliseconds.
+ * 
+ * If started from the command line, the benchmark starts immediately, and the
+ * number of requests is set to the default value DEFAULT_NUM_REQUESTS. An
+ * integer can optionally be passed in as a command line argument to replace
+ * this number. The results (time and number of requests sampled) will be
+ * written to stdout.
+ * 
+ * If started from within ./test-performance.js, the benchmark will be started
+ * when the parent process passes a configuration object. Upon finishing,
+ * the results are passed to the parent process instead of being written to
+ * stdout.
+ */
 module.exports = function run(fn) {
   if (process.send) {
     // is child process
     process.on('message', setupAndRun);
-  } else if (process.argv[2]) {
-    var minimist = require('minimist');
-    var args = minimist(process.argv.slice(2));
-    setupAndRun({
-      numRequests: args['num-requests'] || DEFAULT_NUM_REQUESTS,
-      agent: args['agent'] || true
-    });
   } else {
-    setupAndRun({ numRequests: DEFAULT_NUM_REQUESTS, agent: true, config: {} });
+    var numRequests = parseInt(process.argv[2]) || DEFAULT_NUM_REQUESTS;
+    setupAndRun({ numRequests: numRequests, agent: true, config: {} });
   }
 
   function setupAndRun(options) {
@@ -70,7 +84,7 @@ module.exports = function run(fn) {
           setNock(privateAgent.config_.projectId, options.apiDelay);
           setAuthNock();
         }
-        // We still want to count how many samples were taken
+        // We still want to count how many samples were taken.
         var originalWriteSpan = privateAgent.traceWriter.writeSpan;
         privateAgent.traceWriter.writeSpan = function(spanData) {
           numSampled++;
