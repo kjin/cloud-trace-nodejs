@@ -1,5 +1,4 @@
 var nock = require('nock');
-var trace = require('../..');
 
 var DEFAULT_NUM_REQUESTS = 30000;
 
@@ -28,11 +27,14 @@ module.exports = function run(fn) {
     // is child process
     process.on('message', setupAndRun);
   } else {
-    var numRequests = parseInt(process.argv[2]) || DEFAULT_NUM_REQUESTS;
-    setupAndRun({ numRequests: numRequests, agent: true, config: {} });
+    setupAndRun({
+      numRequests: parseInt(process.argv[2]) || DEFAULT_NUM_REQUESTS
+    });
   }
 
   function setupAndRun(options) {
+    var trace = require(options.traceAgentPath || __dirname + '/../..');
+
     function setNock(projectId, delay) {
       nock('https://cloudtrace.googleapis.com')
         .persist()
