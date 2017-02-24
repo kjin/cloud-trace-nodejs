@@ -75,13 +75,16 @@ var results = {};
 var next = function() {
   for (var test in results) {
     for (var config in results[test]) {
-      var length = results[test][config].raw.length;
       results[test][config].mean = results[test][config].raw.reduce(function(previousValue, currentValue) {
         return {
-          time: previousValue.time + currentValue.time / length,
-          percentSampled: previousValue.percentSampled + currentValue.percentSampled / length
+          time: previousValue.time + currentValue.time,
+          percentSampled: previousValue.percentSampled + currentValue.percentSampled
         };
       }, { time: 0, percentSampled: 0 });
+      if (numRuns > 0) {
+        results[test][config].mean.time /= numRuns;
+        results[test][config].mean.percentSampled /= numRuns;
+      }
       delete results[test][config].raw;
     }
   }
@@ -119,7 +122,14 @@ function queueSpawn(testName, configName, options) {
 }
 
 for (var testName of testNames) {
-  var filteredPluginConfig = { plugins: { [testName]: config.plugins[testName] } };
+  var filteredPluginConfig = Object.keys(config.plugins)
+    .reduce(function(prevValue, e) {
+      if (e !== testName) {
+        prevValue.plugins[e] = ''
+      }
+      return prevValue;
+    }, { plugins: {} });
+  console.log(filteredPluginConfig);
   for (var configName of configNames) {
     queueSpawn(testName, configName, _.assign({}, childArgs, {
       config: _.assign({}, filteredPluginConfig, configurations[configName])
