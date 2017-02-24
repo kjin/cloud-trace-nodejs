@@ -33,7 +33,7 @@ var config = require('../../config.js').trace;
 var tests = {
   http: 'http/http-performance-runner.js',
   express: 'express/express-performance-runner.js',
-  mongo: 'mongo/mongo-performance-runner.js',
+  'mongodb-core': 'mongo/mongo-performance-runner.js',
   restify: 'restify/restify-performance-runner.js'
 };
 
@@ -49,8 +49,8 @@ var configurations = {
 //   - full: let runner contact api server directly (we likely never want this)
 var argv = minimist(process.argv.slice(2), {
   default: {
-    'num-runs': 5,
-    'num-requests': 3000,
+    'num-runs': 10,
+    'num-requests': 30000,
     'api-delay': 0,
     'write-mode': 'none'
   }
@@ -118,11 +118,11 @@ function queueSpawn(testName, configName, options) {
   }
 }
 
-for (var test of testNames) {
-  var filteredPluginConfig = { plugins: { [test]: config.plugins[test] } };
-  for (var config of configNames) {
-    queueSpawn(test, config, _.assign({}, childArgs, {
-      config: _.assign({}, filteredPluginConfig, configurations[config])
+for (var testName of testNames) {
+  var filteredPluginConfig = { plugins: { [testName]: config.plugins[testName] } };
+  for (var configName of configNames) {
+    queueSpawn(testName, configName, _.assign({}, childArgs, {
+      config: _.assign({}, filteredPluginConfig, configurations[configName])
     }));
   }
 }

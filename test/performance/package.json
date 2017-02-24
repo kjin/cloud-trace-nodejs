@@ -8,5 +8,8 @@
     "mongodb-core": "^2.1.6",
     "mongoose": "^4.7.7",
     "restify": "^4.3.0"
+  },
+  "scripts": {
+    "start": "node test-performance.js express http mongodb-core restify"
   }
 }
