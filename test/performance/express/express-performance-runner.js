@@ -17,7 +17,7 @@
 'use strict';
 
 var run = require('../common.js');
-run(function(traceAgent, N, done) {
+run(function(traceApi, N, done) {
   var express = require('express');
   var http = require('http');
   var path = '/';

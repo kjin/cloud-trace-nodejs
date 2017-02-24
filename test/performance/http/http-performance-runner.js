@@ -17,7 +17,7 @@
 'use strict';
 
 var run = require('../common.js');
-run(function(traceAgent, N, done) {
+run(function(traceApi, N, done) {
   var http = require('http');
   var port = 8080;
   var httpAgent = new http.Agent({maxSockets: 50});
@@ -31,7 +31,7 @@ run(function(traceAgent, N, done) {
 
     var start = process.hrtime();
     for (var i = 0; i < N; ++i) {
-      traceAgent.runInRootSpan({ name: 'outer' }, function(rootSpan) {
+      traceApi.runInRootSpan({ name: 'outer' }, function(rootSpan) {
         http.get({port: port, agent: httpAgent, path: '/'}, function(res) {
           var buffer = '';
           if (rootSpan) {

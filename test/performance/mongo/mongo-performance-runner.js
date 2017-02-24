@@ -23,7 +23,7 @@
 //   ex) docker run -p 27017:27017 -d mongo
 
 var run = require('../common.js');
-run(function(traceAgent, N, done) {
+run(function(traceApi, N, done) {
   var mongoose = require('mongoose');
   var Schema = mongoose.Schema;
 
@@ -51,7 +51,7 @@ run(function(traceAgent, N, done) {
       }
       var start = process.hrtime();
       for (var i = 0; i < N; ++i) {
-        traceAgent.runInRootSpan({ name: 'outer' }, function(rootSpan) {
+        traceApi.runInRootSpan({ name: 'outer' }, function(rootSpan) {
           function saveWork(err) {
             Simple.findOne({f1: 'sim'}, function(err, res) {
               if (rootSpan) {
