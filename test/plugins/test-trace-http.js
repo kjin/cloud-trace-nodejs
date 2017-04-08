@@ -24,7 +24,7 @@ var agent = require('../..').start({ samplingRate: 0 });
 
 var assert = require('assert');
 
-describe('test-trace-http', function() {
+describe('http tracing plugin', function() {
   var http;
   var server;
   before(function() {
@@ -41,24 +41,6 @@ describe('test-trace-http', function() {
   afterEach(function() {
     common.cleanTraces(agent);
     server.close();
-  });
-
-  it('should accurately measure get time with callback', function(done) {
-    server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
-      function(endTransaction) {
-        var start = Date.now();
-        http.get({port: common.serverPort}, function(res) {
-          var result = '';
-          res.on('data', function(data) { result += data; });
-          res.on('end', function() {
-            endTransaction();
-            assert.equal(common.serverRes, result);
-            common.assertDurationCorrect(agent, Date.now() - start);
-            done();
-          });
-        });
-      })
-    );
   });
 
   it('should not trace api requests', function(done) {
@@ -115,18 +97,6 @@ describe('test-trace-http', function() {
     );
   });
 
-  it('should accurately measure get time, string url', function(done) {
-    server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
-      function(endTransaction) {
-        http.get('http://localhost:' + common.serverPort);
-        setTimeout(function() {
-          endTransaction();
-          done();
-        }, common.serverWait * 1.5);
-      })
-    );
-  });
-
   it('should not include query parameters in span name', function(done) {
     server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
       function(endTransaction) {
@@ -142,80 +112,112 @@ describe('test-trace-http', function() {
     );
   });
 
-  it('should accurately measure get time, error', function(done) {
-    var server = http.Server(function(req, res) {
-      setTimeout(function() {
-        res.writeHead(200);
-        res.end(common.serverRes);
-      }, 10000);
-    });
-    server.timeout = common.serverWait;
-    server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
-      function(endTransaction) {
-        var start = Date.now();
-        var req = http.get({port: common.serverPort});
-        req.on('error', function() {
-          endTransaction();
-          common.assertDurationCorrect(agent, Date.now() - start);
-          var span = common.getMatchingSpan(agent, function(span) { 
-            return span.name !== 'outer'; 
+  describe('timing', function() {
+    it('should accurately measure get time with callback', function(done) {
+      server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
+        function(endTransaction) {
+          var start = Date.now();
+          http.get({port: common.serverPort}, function(res) {
+            var result = '';
+            res.on('data', function(data) { result += data; });
+            res.on('end', function() {
+              endTransaction();
+              assert.equal(common.serverRes, result);
+              common.assertDurationCorrect(agent, Date.now() - start);
+              done();
+            });
           });
-          assert.equal(span.labels[TraceLabels.ERROR_DETAILS_NAME],
-              'Error');
-          assert.equal(span.labels[TraceLabels.ERROR_DETAILS_MESSAGE],
-              'socket hang up');
-          server.close();
-          done();
-        });
-      })
-    );
-  });
+        })
+      );
+    });
 
-  it('should accurately measure get time, event emitter', function(done) {
-    server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
-      function(endTransaction) {
-        var start = Date.now();
-        var req = http.get({port: common.serverPort});
-        req.on('response', function(res) {
-          var result = '';
-          res.on('data', function(data) { result += data; });
-          res.on('end', function() {
+    it('should accurately measure get time, string url', function(done) {
+      server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
+        function(endTransaction) {
+          http.get('http://localhost:' + common.serverPort);
+          setTimeout(function() {
             endTransaction();
-            assert.equal(common.serverRes, result);
-            common.assertDurationCorrect(agent, Date.now() - start);
             done();
-          });
-        });
-      })
-    );
-  });
-
-  it('should accurately measure request time', function(done) {
-    var server = http.Server(function(req, res) {
-      setTimeout(function() {
-        res.writeHead(200);
-        res.end(common.serverRes);
-      }, common.serverWait / 2);
+          }, common.serverWait * 1.5);
+        })
+      );
     });
-    server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
-      function(endTransaction) {
-        var start = Date.now();
-        var req = http.request({port: common.serverPort}, function(res) {
-          var result = '';
-          res.on('data', function(data) { result += data; });
-          res.on('end', function() {
+
+    it('should accurately measure get time, error', function(done) {
+      var server = http.Server(function(req, res) {
+        setTimeout(function() {
+          res.writeHead(200);
+          res.end(common.serverRes);
+        }, 10000);
+      });
+      server.timeout = common.serverWait;
+      server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
+        function(endTransaction) {
+          var start = Date.now();
+          var req = http.get({port: common.serverPort});
+          req.on('error', function() {
             endTransaction();
-            assert.equal(common.serverRes, result);
             common.assertDurationCorrect(agent, Date.now() - start);
+            var span = common.getMatchingSpan(agent, function(span) { 
+              return span.name !== 'outer'; 
+            });
+            assert.equal(span.labels[TraceLabels.ERROR_DETAILS_NAME],
+                'Error');
+            assert.equal(span.labels[TraceLabels.ERROR_DETAILS_MESSAGE],
+                'socket hang up');
             server.close();
             done();
           });
-        });
+        })
+      );
+    });
+
+    it('should accurately measure get time, event emitter', function(done) {
+      server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
+        function(endTransaction) {
+          var start = Date.now();
+          var req = http.get({port: common.serverPort});
+          req.on('response', function(res) {
+            var result = '';
+            res.on('data', function(data) { result += data; });
+            res.on('end', function() {
+              endTransaction();
+              assert.equal(common.serverRes, result);
+              common.assertDurationCorrect(agent, Date.now() - start);
+              done();
+            });
+          });
+        })
+      );
+    });
+
+    it('should accurately measure request time', function(done) {
+      var server = http.Server(function(req, res) {
         setTimeout(function() {
-          req.end();
+          res.writeHead(200);
+          res.end(common.serverRes);
         }, common.serverWait / 2);
-      })
-    );
+      });
+      server.listen(common.serverPort, common.runInTransaction.bind(null, agent,
+        function(endTransaction) {
+          var start = Date.now();
+          var req = http.request({port: common.serverPort}, function(res) {
+            var result = '';
+            res.on('data', function(data) { result += data; });
+            res.on('end', function() {
+              endTransaction();
+              assert.equal(common.serverRes, result);
+              common.assertDurationCorrect(agent, Date.now() - start);
+              server.close();
+              done();
+            });
+          });
+          setTimeout(function() {
+            req.end();
+          }, common.serverWait / 2);
+        })
+      );
+    });
   });
 
   it('should handle concurrent requests', function(done) {

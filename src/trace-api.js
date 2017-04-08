@@ -20,6 +20,7 @@ var constants = require('./constants.js');
 var extend = require('extend');
 var is = require('is');
 var TraceLabels = require('./trace-labels.js');
+var util = require('./util.js');
 
 /**
  * This file describes an interface for third-party plugins to enable tracing
@@ -27,52 +28,14 @@ var TraceLabels = require('./trace-labels.js');
  */
 
 /**
- * An object that represents a single child span. It exposes functions for
- * adding labels to or closing the span.
- * @param {TraceAgent} agent The underlying trace agent object.
- * @param {SpanData} span The internal data structure backing the child span.
- */
-function ChildSpan(agent, span) {
-  this.agent_ = agent;
-  this.span_ = span;
-  this.serializedTraceContext_ = agent.generateTraceContext(span, true);
-}
-
-/**
- * Adds a label to the child span.
- * @param {string} key The name of the label to add.
- * @param {*} value The value of the label to add.
- */
-ChildSpan.prototype.addLabel = function(key, value) {
-  this.span_.addLabel(key, value);
-};
-
-/**
- * Ends the child span. This function should only be called once.
- */
-ChildSpan.prototype.endSpan = function() {
-  this.span_.close();
-};
-
-/**
- * Gets the trace context serialized as a string. This string can be set as the
- * 'x-cloud-trace-context' field in an HTTP request header to support
- * distributed tracing.
- */
-ChildSpan.prototype.getTraceContext = function() {
-  return this.serializedTraceContext_;
-};
-
-/**
- * An object that represents a single root span. It exposes functions for adding
+ * An object that represents a single span. It exposes functions for adding
  * labels to or closing the span.
- * @param {TraceAgent} agent The underlying trace agent object.
- * @param {SpanData} span The internal data structure backing the root span.
+ * @param {SpanData} span The internal data structure backing the span.
  */
-function RootSpan(agent, span) {
-  this.agent_ = agent;
+function Span(span) {
   this.span_ = span;
-  this.serializedTraceContext_ = agent.generateTraceContext(span, true);
+  this.serializedTraceContext_ = util.stringifyTraceContext(span.trace.traceId,
+    span.span.spanId, 1);
 }
 
 /**
@@ -80,14 +43,14 @@ function RootSpan(agent, span) {
  * @param {string} key The name of the label to add.
  * @param {*} value The value of the label to add.
  */
-RootSpan.prototype.addLabel = function(key, value) {
+Span.prototype.addLabel = function(key, value) {
   this.span_.addLabel(key, value);
 };
 
 /**
  * Ends the span. This function should only be called once.
  */
-RootSpan.prototype.endSpan = function() {
+Span.prototype.endSpan = function() {
   this.span_.close();
 };
 
@@ -96,7 +59,7 @@ RootSpan.prototype.endSpan = function() {
  * 'x-cloud-trace-context' field in an HTTP request header to support
  * distributed tracing.
  */
-RootSpan.prototype.getTraceContext = function() {
+Span.prototype.getTraceContext = function() {
   return this.serializedTraceContext_;
 };
 
@@ -128,9 +91,9 @@ TraceApiImplementation.prototype.enhancedDatabaseReportingEnabled = function() {
  * and closing the span.
  * @param {object} options An object that specifies options for how the root
  * span is created and propogated. @see TraceApiImplementation.prototype.createRootSpan
- * @param {function(?RootSpan)} fn A function that will be called exactly
+ * @param {function(?Span)} fn A function that will be called exactly
  * once. If the incoming request should be traced, a root span will be created,
- * and this function will be called with a RootSpan object exposing functions
+ * and this function will be called with a Span object exposing functions
  * operating on the root span; otherwise, it will be called with null as an
  * argument.
  * @returns The return value of calling fn.
@@ -154,11 +117,11 @@ TraceApiImplementation.prototype.runInRootSpan = function(options, fn) {
 };
 
 /**
- * Creates and returns a new ChildSpan object nested within the root span. If
- * there is no current RootSpan object, this function returns null.
+ * Creates and returns a new Span object nested within the root span. If
+ * there is no current Span object, this function returns null.
  * @param {object} options An object that specifies options for how the child
  * span is created and propogated.
- * @returns A new ChildSpan object, or null if there is no active root span.
+ * @returns A new Span object, or null if there is no active root span.
  */
 TraceApiImplementation.prototype.createChildSpan = function(options) {
   var rootSpan = cls.getRootContext();
@@ -174,8 +137,18 @@ TraceApiImplementation.prototype.createChildSpan = function(options) {
     options = options || {};
     var childContext = this.agent_.startSpan(options.name, {},
       options.skipFrames ? options.skipFrames + 2 : 2);
-    return new ChildSpan(this.agent_, childContext);
+    return new Span(childContext);
   }
+};
+
+TraceApiImplementation.prototype.getOutgoingTraceContext = function(isTraced,
+    incomingTraceContext) {
+  var traceContext = util.parseTraceContext(incomingTraceContext);
+  if (!traceContext) {
+    return '';
+  }
+  traceContext.options = traceContext.options && isTraced ? 1 : 0;
+  return util.stringifyTraceContext(traceContext);
 };
 
 /**
@@ -223,6 +196,7 @@ var phantomApiImpl = {
   createChildSpan: function(opts) { return null; },
   wrap: function(fn) { return fn; },
   wrapEmitter: function(ee) {},
+  getOutgoingTraceContext: function(traced, context) { return null; },
   constants: constants,
   labels: TraceLabels
 };
@@ -260,6 +234,9 @@ module.exports = function TraceApi(pluginName) {
     wrapEmitter: function(ee) {
       return impl.wrapEmitter(ee);
     },
+    getOutgoingTraceContext: function(isTraced, incomingTraceContext) {
+      return impl.getOutgoingTraceContext(isTraced, incomingTraceContext);
+    },
     constants: impl.constants,
     labels: impl.labels,
     isActive: function() {
@@ -283,8 +260,8 @@ function createRootSpan_(api, options, skipFrames) {
   // If the options object passed in has the getTraceContext field set,
   // try to retrieve the header field containing incoming trace metadata.
   var incomingTraceContext;
-  if (is.string(options.traceContext)) {
-    incomingTraceContext = api.agent_.parseContextFromHeader(options.traceContext);
+  if (is.string(options.traceContext) && !api.agent_.config_.ignoreContextHeader) {
+    incomingTraceContext = util.parseTraceContext(options.traceContext);
   }
   incomingTraceContext = incomingTraceContext || {};
   if (!api.agent_.shouldTrace(options.url || '',
@@ -296,5 +273,5 @@ function createRootSpan_(api, options, skipFrames) {
     incomingTraceContext.traceId,
     incomingTraceContext.spanId,
     skipFrames + 1);
-  return new RootSpan(api.agent_, rootContext);
+  return new Span(rootContext);
 }

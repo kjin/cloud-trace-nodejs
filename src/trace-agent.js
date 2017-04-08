@@ -24,7 +24,6 @@ var uuid = require('uuid');
 var constants = require('./constants.js');
 var tracingPolicy = require('./tracing-policy.js');
 var isEqual = require('lodash.isequal');
-var util = require('./util.js');
 
 /** @type {TraceAgent} */
 var traceAgent;
@@ -127,10 +126,10 @@ TraceAgent.prototype.endSpan = function(spanData, labels) {
  */
 TraceAgent.prototype.shouldTrace = function(name, options) {
   var locallyAllowed = this.policy.shouldTrace(Date.now(), name);
-  // Note: remotelyDisallowed is false if no trace options are present.
-  var remotelyDisallowed = !(isNaN(options) ||
-    (options & constants.TRACE_OPTIONS_TRACE_ENABLED));
-  return locallyAllowed && !remotelyDisallowed;
+  // Note: remotelyAllowed is true if no trace options are present.
+  var remotelyAllowed = isNaN(options) ||
+    (options & constants.TRACE_OPTIONS_TRACE_ENABLED);
+  return locallyAllowed && remotelyAllowed;
 };
 
 /**
@@ -162,42 +161,6 @@ TraceAgent.prototype.createRootSpanData = function(name, traceId, parentId,
 TraceAgent.prototype.isTraceAgentRequest = function(options) {
   return options && options.headers &&
     !!options.headers[constants.TRACE_AGENT_REQUEST_HEADER];
-};
-
-/**
- * Parse a cookie-style header string to extract traceId, spandId and options,
- * or returns null if the agent has been configured to ignore it.
- * @see util.parseContextFromHeader
- *
- * @param {string} str string representation of the trace headers
- * @return {?{traceId: string, spanId: string, options: number}}
- *         object with keys. null if there is a problem.
- */
-TraceAgent.prototype.parseContextFromHeader = function(str) {
-  if (this.config_.ignoreContextHeader) {
-    return null;
-  }
-  return util.parseContextFromHeader(str);
-};
-
-/**
- * Generates a trace context header value that can be used
- * to follow the associated request through other Google services.
- *
- * @param {SpanData} spanData The span to be added to headers. Must not
- *                            be the nullSpan.
- * @param {boolean} traced Whether this request was traced by the agent.
- */
-TraceAgent.prototype.generateTraceContext = function(spanData, traced) {
-  if (spanData === SpanData.nullSpan) {
-    return '';
-  }
-  var header = spanData.trace.traceId + '/' + spanData.span.spanId;
-  var options = traced ?
-    spanData.options | constants.TRACE_OPTIONS_TRACE_ENABLED :
-    spanData.options;
-  header += (';o=' + options);
-  return header;
 };
 
 module.exports = {

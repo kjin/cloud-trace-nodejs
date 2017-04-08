@@ -51,7 +51,7 @@ var moduleRegex = new RegExp(
 );
 
 /**
- * Parse a cookie-style header string to extract traceId, spandId and options
+ * Parse a cookie-style header string to extract traceId, spanId and options
  * ex: '123456/667;o=3'
  * -> {traceId: '123456', spanId: '667', options: '3'}
  * note that we ignore trailing garbage if there is more than one '='
@@ -61,7 +61,7 @@ var moduleRegex = new RegExp(
  * @return {?{traceId: string, spanId: string, options: number}}
  *         object with keys. null if there is a problem.
  */
-function parseContextFromHeader(str) {
+function parseTraceContext(str) {
   if (!str) {
     return null;
   }
@@ -70,11 +70,20 @@ function parseContextFromHeader(str) {
       (matches[2] && isNaN(matches[2]))) {
     return null;
   }
+  // This should be the sole point in code where we assume that having no
+  // trace options is equivalent to having it set to 1.
   return {
     traceId: matches[1],
     spanId: matches[2],
-    options: Number(matches[3])
+    options: typeof(matches[3]) === 'undefined' ? 1 : Number(matches[3])
   };
+}
+
+function stringifyTraceContext(traceId, spanId, options) {
+  if (typeof(traceId) === 'object') {
+    return stringifyTraceContext(traceId.traceId, traceId.spanId, traceId.options);
+  }
+  return traceId + '/' + spanId + ';o=' + options;
 }
 
 /**
@@ -127,7 +136,8 @@ function findModuleVersion(modulePath, load) {
 
 module.exports = {
   truncate: truncate,
-  parseContextFromHeader: parseContextFromHeader,
+  parseTraceContext: parseTraceContext,
+  stringifyTraceContext: stringifyTraceContext,
   packageNameFromPath: packageNameFromPath,
   findModulePath: findModulePath,
   findModuleVersion: findModuleVersion

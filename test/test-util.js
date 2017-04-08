@@ -82,3 +82,112 @@ describe('util.findModuleVersion', function() {
     assert.equal(util.findModuleVersion(modulePath, Module._load), truePackage.version);
   });
 });
+
+describe('util.stringifyTraceContext', function() {
+  it('generates a well-formatted stringified context', function() {
+    cls.getNamespace().run(function() {
+      var spanData = {
+        traceId: 'ffeeddccbbaa99887766554433221100',
+        spanId: 100,
+        options: 2
+      };
+      var context = util.stringifyTraceContext(spanData);
+      assert.strictEqual(context, 'ffeeddccbbaa99887766554433221100/100;o=2');
+    });
+  });
+
+  it('sets trace enabled bit when traced', function() {
+    cls.getNamespace().run(function() {
+      var spanData = agent.createRootSpanData('name', 1, 2);
+      spanData.options = 2;
+      var context = agent.generateTraceContext(spanData, true);
+      var parsed = agent.parseContextFromHeader(context);
+      assert.equal(parsed.options, 3);
+    });
+  });
+
+  it('leaves options alone when untraced', function() {
+    cls.getNamespace().run(function() {
+      var spanData = agent.createRootSpanData('name', 1, 2);
+      spanData.options = 2;
+      var context = agent.generateTraceContext(spanData, false);
+      var parsed = agent.parseContextFromHeader(context);
+      assert.equal(parsed.options, 2);
+    });
+  });
+
+  it('noop on nullSpan', function() {
+    cls.getNamespace().run(function() {
+      var context = util.generateTraceContext(SpanData.nullSpan);
+      assert.equal(context, '');
+    });
+  });
+});
+
+describe('util.parseTraceContext', function() {
+  describe('valid inputs', function() {
+    it('should return expected values: 123456/667;o=1', function() {
+      var result = util.parseTraceContext(
+        '123456/667;o=1');
+      assert(result);
+      assert.equal(result.traceId, '123456');
+      assert.equal(result.spanId, 667);
+      assert.equal(result.options, '1');
+    });
+
+    it('should return expected values:' +
+        '123456/123456123456123456123456123456123456;o=1', function() {
+      var result = util.parseTraceContext(
+        '123456/123456123456123456123456123456123456;o=1');
+      assert(result);
+      assert.equal(result.traceId, '123456');
+      assert.equal(result.spanId, '123456123456123456123456123456123456');
+      assert.equal(result.options, '1');
+    });
+
+    it('should return expected values: 123456/667', function() {
+      var result = util.parseTraceContext(
+        '123456/667');
+      assert(result);
+      assert.equal(result.traceId, '123456');
+      assert.equal(result.spanId, 667);
+      assert(!result.options);
+    });
+
+    it('should return expected values: 123456;o=1', function() {
+      var result = util.parseTraceContext(
+        '123456;o=1');
+      assert(result);
+      assert.equal(result.traceId, '123456');
+      assert(!result.spanId);
+      assert.equal(result.options, '1');
+    });
+
+    it('should return expected values: 123456', function() {
+      var result = util.parseTraceContext(
+        '123456');
+      assert(result);
+      assert.equal(result.traceId, '123456');
+      assert(!result.spanId);
+      assert(!result.options);
+    });
+  });
+
+  describe('invalid inputs', function() {
+    var inputs = [
+      '',
+      null,
+      undefined,
+      'o=1;123456',
+      '123;456;o=1',
+      '123/o=1;456',
+      '123/abc/o=1'
+    ];
+    inputs.forEach(function(s) {
+      it('should reject ' + s, function() {
+        var result = util.parseTraceContext(s);
+        assert.ok(!result);
+      });
+    });
+  });
+});
