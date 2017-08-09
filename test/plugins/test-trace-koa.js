@@ -15,11 +15,11 @@
  */
 'use strict';
 
-var common = require('./common.js');
+var common = require('./common'/*.js*/);
 var http = require('http');
 var assert = require('assert');
-var constants = require('../../src/constants.js');
-var traceLabels = require('../../src/trace-labels.js');
+var constants = require('../../src/constants'/*.js*/);
+var traceLabels = require('../../src/trace-labels'/*.js*/);
 var semver = require('semver');
 var appBuilders = {
   koa1: buildKoa1App

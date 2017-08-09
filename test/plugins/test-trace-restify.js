@@ -15,11 +15,11 @@
  */
 'use strict';
 
-var traceLabels = require('../../src/trace-labels.js');
+var traceLabels = require('../../src/trace-labels'/*.js*/);
 var http = require('http');
 var assert = require('assert');
-var constants = require('../../src/constants.js');
-var common = require('./common.js');
+var constants = require('../../src/constants'/*.js*/);
+var common = require('./common'/*.js*/);
 var semver = require('semver');
 var versions = {
   restify4: './fixtures/restify4'

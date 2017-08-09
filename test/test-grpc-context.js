@@ -15,7 +15,7 @@
  */
 'use strict';
 
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 
 var assert = require('assert');
 var http = require('http');

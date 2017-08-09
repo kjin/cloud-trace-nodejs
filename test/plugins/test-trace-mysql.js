@@ -15,8 +15,8 @@
  */
 'use strict';
 
-var common = require('./common.js');
-var traceLabels = require('../../src/trace-labels.js');
+var common = require('./common'/*.js*/);
+var traceLabels = require('../../src/trace-labels'/*.js*/);
 var assert = require('assert');
 
 var RESULT_SIZE = 5;
@@ -39,7 +39,7 @@ describe('test-trace-mysql', function() {
       databaseResultReportingSize: RESULT_SIZE
     });
     mysql = require('./fixtures/mysql2');
-    pool = mysql.createPool(require('../mysql-config.js'));
+    pool = mysql.createPool(require('../mysql-config'/*.js*/));
   });
 
   beforeEach(function(done) {

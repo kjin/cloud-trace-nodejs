@@ -23,9 +23,9 @@ proxyquire('gcp-metadata', {
 
 var logger = require('@google-cloud/common').logger;
 var trace = require('../..');
-var cls = require('../../src/cls.js');
-var tracePolicy = require('../../src/tracing-policy.js');
-var TraceWriter = require('../../src/trace-writer.js');
+var cls = require('../../src/cls'/*.js*/);
+var tracePolicy = require('../../src/tracing-policy'/*.js*/);
+var TraceWriter = require('../../src/trace-writer'/*.js*/);
 
 var assert = require('assert');
 var http = require('http');
@@ -34,7 +34,7 @@ var path = require('path');
 var request = require('request');
 var shimmer = require('shimmer');
 
-var TraceAgent = require('../../src/trace-api.js');
+var TraceAgent = require('../../src/trace-api'/*.js*/);
 var testTraceAgent;
 shimmer.wrap(trace, 'start', function(original) {
   return function() {

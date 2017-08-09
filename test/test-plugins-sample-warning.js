@@ -20,7 +20,7 @@
 //   ex) docker -d
 // Run a mongo image binding the mongo port
 //   ex) docker run -p 27017:27017 -d mongo
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 
 var assert = require('assert');
 var http = require('http');
@@ -126,7 +126,7 @@ describe('express + dbs', function() {
 
     var app = express();
     app.get('/', function (req, res) {
-      var pool = mysql.createPool(require('./mysql-config.js'));
+      var pool = mysql.createPool(require('./mysql-config'/*.js*/));
       http.get('http://www.google.com/', function() {
         pool.getConnection(function(err, conn) {
           conn.query('SHOW COLUMNS FROM t', function(err) {

@@ -16,12 +16,12 @@
 
 'use strict';
 
-var constants = require('./constants.js');
-var TraceSpan = require('./trace-span.js');
-var TraceLabels = require('./trace-labels.js');
-var traceUtil = require('./util.js');
+var constants = require('./constants'/*.js*/);
+var TraceSpan = require('./trace-span'/*.js*/);
+var TraceLabels = require('./trace-labels'/*.js*/);
+var traceUtil = require('./util'/*.js*/);
 var util = require('util');
-var TraceWriter = require('./trace-writer.js');
+var TraceWriter = require('./trace-writer'/*.js*/);
 
 // Auto-incrementing integer
 var uid = 1;

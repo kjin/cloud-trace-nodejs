@@ -21,7 +21,7 @@
 // Run a redis image binding the redis port
 //   ex) docker run -p 6379:6379 -d redis
 var assert = require('assert');
-var common = require('./common.js');
+var common = require('./common'/*.js*/);
 
 describe('multiple instrumentations of the same module', function() {
   var agent;

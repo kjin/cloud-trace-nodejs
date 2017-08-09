@@ -15,7 +15,7 @@
  */
 'use strict';
 
-var common = require('./common.js');
+var common = require('./common'/*.js*/);
 var nock = require('nock');
 var assert = require('assert');
 var path = require('path');

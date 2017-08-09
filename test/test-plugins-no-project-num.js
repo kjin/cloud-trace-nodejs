@@ -133,7 +133,7 @@ describe('test-plugins-no-project-num', function(){
 
     it('mysql', function(done) {
       var mysql = require('./plugins/fixtures/mysql2');
-      var pool = mysql.createPool(require('./mysql-config.js'));
+      var pool = mysql.createPool(require('./mysql-config'/*.js*/));
       pool.getConnection(function(err, conn) {
         assert(!err, 'Skipping: Failed to connect to mysql.');
         conn.query('SHOW TABLES', function(err, result) {

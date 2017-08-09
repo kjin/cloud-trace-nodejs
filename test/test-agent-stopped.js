@@ -16,7 +16,7 @@
 
 'use strict';
 
-require('./plugins/common.js');
+require('./plugins/common'/*.js*/);
 var assert = require('assert');
 var http = require('http');
 var nock = require('nock');

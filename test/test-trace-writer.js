@@ -17,14 +17,14 @@
 'use strict';
 
 // Loading this file patches gcpMetadata so requests don't time out.
-require('./plugins/common.js');
+require('./plugins/common'/*.js*/);
 var assert = require('assert');
 var fakeCredentials = require('./fixtures/gcloud-credentials.json');
 var nock = require('nock');
-var nocks = require('./nocks.js');
+var nocks = require('./nocks'/*.js*/);
 var os = require('os');
 var Service = require('@google-cloud/common').Service;
-var traceLabels = require('../src/trace-labels.js');
+var traceLabels = require('../src/trace-labels'/*.js*/);
 
 nock.disableNetConnect();
 
@@ -59,7 +59,7 @@ function createFakeSpan(name) {
 }
 
 describe('TraceWriter', function() {
-  var TraceWriter = require('../src/trace-writer.js');
+  var TraceWriter = require('../src/trace-writer'/*.js*/);
 
   it('should be a Service instance', function() {
     var writer = TraceWriter.create(fakeLogger, {

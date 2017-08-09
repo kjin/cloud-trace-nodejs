@@ -15,15 +15,15 @@
  */
 
 'use strict';
-var cls = require('./cls.js');
-var constants = require('./constants.js');
+var cls = require('./cls'/*.js*/);
+var constants = require('./constants'/*.js*/);
 var is = require('is');
-var TraceLabels = require('./trace-labels.js');
-var util = require('./util.js');
-var Trace = require('./trace.js');
-var SpanData = require('./span-data.js');
+var TraceLabels = require('./trace-labels'/*.js*/);
+var util = require('./util'/*.js*/);
+var Trace = require('./trace'/*.js*/);
+var SpanData = require('./span-data'/*.js*/);
 var uuid = require('uuid');
-var TracingPolicy = require('./tracing-policy.js');
+var TracingPolicy = require('./tracing-policy'/*.js*/);
 
 /**
  * Phantom implementation of the trace api. When disabled, a TraceAgent instance

@@ -17,8 +17,8 @@
 
 var assert = require('assert');
 
-var common = require('./common.js');
-var traceLabels = require('../../src/trace-labels.js');
+var common = require('./common'/*.js*/);
+var traceLabels = require('../../src/trace-labels'/*.js*/);
 
 var RESULT_SIZE = 5;
 var TABLE_NAME = 't';

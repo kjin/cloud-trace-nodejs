@@ -24,7 +24,7 @@ var newWarn = function(error) {
   }
 };
 
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 
 nock.disableNetConnect();
 

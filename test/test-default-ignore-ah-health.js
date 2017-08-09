@@ -18,7 +18,7 @@
 var assert = require('assert');
 var http = require('http');
 
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 
 describe('test-default-ignore-ah-health', function() {
   var agent;

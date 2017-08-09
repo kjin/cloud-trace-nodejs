@@ -19,9 +19,9 @@
 var common = require('@google-cloud/common');
 var gcpMetadata = require('gcp-metadata');
 var util = require('util');
-var traceLabels = require('./trace-labels.js');
+var traceLabels = require('./trace-labels'/*.js*/);
 var pjson = require('../package.json');
-var constants = require('./constants.js');
+var constants = require('./constants'/*.js*/);
 
 var onUncaughtExceptionValues = ['ignore', 'flush', 'flushAndExit'];
 

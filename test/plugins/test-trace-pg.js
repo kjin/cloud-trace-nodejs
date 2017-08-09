@@ -15,8 +15,8 @@
  */
 'use strict';
 
-var common = require('./common.js');
-var traceLabels = require('../../src/trace-labels.js');
+var common = require('./common'/*.js*/);
+var traceLabels = require('../../src/trace-labels'/*.js*/);
 var assert = require('assert');
 
 describe('test-trace-pg', function() {
@@ -31,7 +31,7 @@ describe('test-trace-pg', function() {
       enhancedDatabaseReporting: true
     });
     var pg = require('./fixtures/pg6');
-    pool = new pg.Pool(require('../pg-config.js'));
+    pool = new pg.Pool(require('../pg-config'/*.js*/));
   });
 
   beforeEach(function(done) {

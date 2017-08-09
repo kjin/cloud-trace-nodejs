@@ -20,8 +20,8 @@
 //   ex) docker -d
 // Run a mongo image binding the mongo port
 //   ex) docker run -p 27017:27017 -d mongo
-var common = require('./common.js');
-var traceLabels = require('../../src/trace-labels.js');
+var common = require('./common'/*.js*/);
+var traceLabels = require('../../src/trace-labels'/*.js*/);
 var assert = require('assert');
 
 var RESULT_SIZE = 5;

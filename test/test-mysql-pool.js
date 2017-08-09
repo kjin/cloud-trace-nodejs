@@ -15,7 +15,7 @@
  */
 'use strict';
 
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 var assert = require('assert');
 var http = require('http');
 var semver = require('semver');
@@ -39,7 +39,7 @@ if (semver.satisfies(process.version, '>=4')) {
       server.connection({ port: common.serverPort });
       server.register({
         register: require('./plugins/fixtures/hapi-plugin-mysql3'),
-        options: require('./mysql-config.js')
+        options: require('./mysql-config'/*.js*/)
       }, function (err) {
         assert(!err);
         server.route({ 

@@ -20,7 +20,7 @@
 //   ex) docker -d
 // Run a mongo image binding the mongo port
 //   ex) docker run -p 27017:27017 -d mongo
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 
 var assert = require('assert');
 var http = require('http');

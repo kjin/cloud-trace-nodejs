@@ -16,10 +16,10 @@
 
 'use strict';
 
-require('./plugins/common.js');
+require('./plugins/common'/*.js*/);
 var assert = require('assert');
 var nock = require('nock');
-var nocks = require('./nocks.js');
+var nocks = require('./nocks'/*.js*/);
 var trace = require('..');
 
 nock.disableNetConnect();

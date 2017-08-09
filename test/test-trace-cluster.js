@@ -16,7 +16,7 @@
 
 'use strict';
 
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 var cluster = require('cluster');
 
 describe('test-trace-cluster', function() {

@@ -16,13 +16,13 @@
 'use strict';
 
 var assert = require('assert');
-var cls = require('../../src/cls.js');
-var util = require('../../src/util.js');
-var constants = require('../../src/constants.js');
+var cls = require('../../src/cls'/*.js*/);
+var util = require('../../src/util'/*.js*/);
+var constants = require('../../src/constants'/*.js*/);
 var shimmer = require('shimmer');
-var traceLabels = require('../../src/trace-labels.js');
-var TracingPolicy = require('../../src/tracing-policy.js');
-var common = require('./common.js');
+var traceLabels = require('../../src/trace-labels'/*.js*/);
+var TracingPolicy = require('../../src/tracing-policy'/*.js*/);
+var common = require('./common'/*.js*/);
 
 var versions = {
   grpc1: './fixtures/grpc1'

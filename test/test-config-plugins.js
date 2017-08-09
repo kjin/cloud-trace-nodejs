@@ -19,7 +19,7 @@
 var assert = require('assert');
 var shimmer = require('shimmer');
 var trace = require('..');
-var pluginLoader = require('../src/trace-plugin-loader.js');
+var pluginLoader = require('../src/trace-plugin-loader'/*.js*/);
 
 var instrumentedModules = ['connect', 'express', 'generic-pool', 'grpc', 'hapi',
   'http', 'knex', 'koa', 'mongodb-core', 'mysql', 'pg', 'redis', 'restify'];

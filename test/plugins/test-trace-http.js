@@ -15,11 +15,11 @@
  */
 'use strict';
 
-var common = require('./common.js');
-var constants = require('../../src/constants.js');
+var common = require('./common'/*.js*/);
+var constants = require('../../src/constants'/*.js*/);
 var semver = require('semver');
 var stream = require('stream');
-var TraceLabels = require('../../src/trace-labels.js');
+var TraceLabels = require('../../src/trace-labels'/*.js*/);
 
 require('../..').start({ 
   projectId: '0',
@@ -271,7 +271,7 @@ describe('test-trace-http', function() {
               assert.equal(spans.length, 5);
               // We need to check a property attached at the end of a span
               var statusCodes = [];
-              var labels = require('../../src/trace-labels.js');
+              var labels = require('../../src/trace-labels'/*.js*/);
               for (var j = 0; j < spans.length; j++) {
                 var code = Number(spans[j].labels[
                     labels.HTTP_RESPONSE_CODE_LABEL_KEY]);

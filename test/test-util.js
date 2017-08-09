@@ -20,9 +20,9 @@ var assert = require('assert');
 var inspect = require('util').inspect;
 var Module = require('module');
 var semver = require('semver');
-var util = require('../src/util.js');
+var util = require('../src/util'/*.js*/);
 var path = require('path');
-var constants = require('../src/constants.js');
+var constants = require('../src/constants'/*.js*/);
 
 describe('util.truncate', function() {
   it('should truncate objects larger than size', function() {

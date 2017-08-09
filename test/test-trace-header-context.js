@@ -15,10 +15,10 @@
  */
 'use strict';
 
-var common = require('./plugins/common.js');
+var common = require('./plugins/common'/*.js*/);
 var http = require('http');
 var assert = require('assert');
-var constants = require('../src/constants.js');
+var constants = require('../src/constants'/*.js*/);
 
 var fakeTraceId = 'ffeeddccbbaa99887766554433221100';
 

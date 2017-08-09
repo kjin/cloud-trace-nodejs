@@ -17,9 +17,9 @@
 'use strict';
 
 var assert = require('assert');
-var constants = require('../src/constants.js');
+var constants = require('../src/constants'/*.js*/);
 var trace = require('..');
-var TraceWriter = require('../src/trace-writer.js');
+var TraceWriter = require('../src/trace-writer'/*.js*/);
 
 describe('maximumLabelValueSize configuration', function() {
   it('should not allow values above server maximum', function() {
