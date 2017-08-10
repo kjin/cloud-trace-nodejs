@@ -266,3 +266,5 @@ describe('test-trace-knex', function() {
     });
   });
 });
+
+export default {};

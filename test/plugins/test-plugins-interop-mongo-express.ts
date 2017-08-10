@@ -63,3 +63,5 @@ describe('mongodb + express', function() {
     });
   });
 });
+
+export default {};

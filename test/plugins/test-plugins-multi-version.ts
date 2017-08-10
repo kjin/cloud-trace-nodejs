@@ -74,3 +74,5 @@ function redisPredicate(id, span) {
   return span.name.length >= id.length &&
       span.name.substr(0, id.length) === id;
 }
+
+export default {};

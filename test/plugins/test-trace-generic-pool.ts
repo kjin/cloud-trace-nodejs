@@ -156,3 +156,5 @@ describe('generic-pool3', function() {
     return promise;
   });
 });
+
+export default {};

@@ -54,3 +54,5 @@ describe('TraceSpan', function() {
     assert.ok(span.isClosed());
   });
 });
+
+export default {};

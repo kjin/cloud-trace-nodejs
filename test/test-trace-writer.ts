@@ -318,3 +318,5 @@ describe('TraceWriter', function() {
     });
   });
 });
+
+export default {};

@@ -36,3 +36,5 @@ module.exports = {
   /** Maximum size of a label value in bytes. */
   TRACE_SERVICE_LABEL_VALUE_LIMIT: 16 * 1024 - 1,
 };
+
+export default {};

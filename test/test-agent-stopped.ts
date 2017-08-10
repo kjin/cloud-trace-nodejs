@@ -121,3 +121,5 @@ describe('test-agent-stopped', function() {
     });
   });
 });
+
+export default {};

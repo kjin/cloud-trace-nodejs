@@ -225,3 +225,5 @@ describe('test-trace-connect', function() {
 function connectPredicate(span) {
   return span.name === '/';
 }
+
+export default {};

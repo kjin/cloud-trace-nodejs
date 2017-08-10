@@ -64,3 +64,5 @@ function runForSecond(policy) {
   }
   return successes;
 }
+
+export default {};

@@ -218,3 +218,5 @@ Object.keys(versions).forEach(function(version) {
     });
   });
 });
+
+export default {};

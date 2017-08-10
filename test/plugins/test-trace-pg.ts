@@ -139,3 +139,5 @@ describe('test-trace-pg', function() {
     });
   });
 });
+
+export default {};

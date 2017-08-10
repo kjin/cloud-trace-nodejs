@@ -50,3 +50,5 @@ describe('test-default-ignore-ah-health', function() {
     });
   });
 });
+
+export default {};

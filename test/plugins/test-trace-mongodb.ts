@@ -214,3 +214,5 @@ describe('mongodb', function() {
 function mongoPredicate(id, span) {
   return span.name.length >= 12 && span.name.substr(0, 12) === id;
 }
+
+export default {};

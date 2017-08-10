@@ -62,3 +62,5 @@ TraceSpan.prototype.isClosed = function() {
  * Export TraceSpan.
  */
 module.exports = TraceSpan;
+
+export default {};

@@ -89,3 +89,5 @@ function patchRestify(restify, api) {
 module.exports = [
   {versions: SUPPORTED_VERSIONS, patch: patchRestify, unpatch: unpatchRestify}
 ];
+
+export default {};

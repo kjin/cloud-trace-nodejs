@@ -24,3 +24,5 @@ module.exports = (process.env.CIRCLECI === 'true') ? {
   password: 'Password12!',
   database: 'test'
 };
+
+export default {};

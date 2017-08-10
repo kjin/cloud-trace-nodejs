@@ -71,3 +71,5 @@ describe('test-trace-datastore', function() {
 function grpcPredicate(span) {
   return span.name.indexOf('grpc:') === 0;
 }
+
+export default {};

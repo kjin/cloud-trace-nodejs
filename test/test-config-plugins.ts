@@ -78,3 +78,5 @@ describe('plugin configuration', function() {
     assert.strictEqual(plugins.express, 'foo');
   });
 });
+
+export default {};

@@ -34,3 +34,5 @@ describe('maximumLabelValueSize configuration', function() {
     assert.strictEqual(valueMax, 10);
   });
 });
+
+export default {};

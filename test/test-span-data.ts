@@ -165,3 +165,5 @@ describe('SpanData', function() {
     });
   });
 });
+
+export default {};

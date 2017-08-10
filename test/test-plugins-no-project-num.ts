@@ -144,3 +144,5 @@ describe('test-plugins-no-project-num', function(){
     });
   });
 });
+
+export default {};

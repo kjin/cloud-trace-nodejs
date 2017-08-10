@@ -193,3 +193,5 @@ describe('test-trace-mysql', function() {
     });
   });
 });
+
+export default {};

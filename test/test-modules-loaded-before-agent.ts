@@ -27,3 +27,5 @@ describe('modules loaded before agent', function() {
     assert(output.toString().match(/Tracing might not work.*"glob".*/));
   });
 });
+
+export default {};

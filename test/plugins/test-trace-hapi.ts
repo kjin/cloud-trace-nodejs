@@ -355,3 +355,5 @@ describe('hapi', function() {
 function hapiPredicate(span) {
   return span.name === '/';
 }
+
+export default {};

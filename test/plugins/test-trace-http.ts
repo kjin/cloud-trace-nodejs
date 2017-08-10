@@ -348,3 +348,5 @@ describe('https', function() {
     );
   });
 });
+
+export default {};

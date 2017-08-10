@@ -29,3 +29,5 @@ describe('Trace', function() {
     assert.equal(trace.spans.length, 0);
   });
 });
+
+export default {};

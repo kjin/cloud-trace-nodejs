@@ -27,3 +27,5 @@ function Trace(projectId, traceId) {
 }
 
 module.exports = Trace;
+
+export default {};

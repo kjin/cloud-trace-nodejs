@@ -344,3 +344,5 @@ module.exports = {
     return traceWriter;
   }
 };
+
+export default {};

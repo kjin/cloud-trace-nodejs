@@ -123,3 +123,5 @@ module.exports = [
     }
   }
 ];
+
+export default {};

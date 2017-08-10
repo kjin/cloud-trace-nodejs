@@ -147,3 +147,5 @@ describe('express + dbs', function() {
     });
   });
 });
+
+export default {};

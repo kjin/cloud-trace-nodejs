@@ -247,3 +247,5 @@ describe('Trace Interface', function() {
     });
   });
 });
+
+export default {};

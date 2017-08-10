@@ -31,3 +31,5 @@ if (semver.satisfies(process.versions.node, '>= 2.2.0')) {
 } else {
   console.log('Skipping --require test for node ', process.versions.node);
 }
+
+export default {};

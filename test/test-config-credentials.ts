@@ -145,3 +145,5 @@ describe('test-config-credentials', function() {
     });
   });
 });
+
+export default {};

@@ -71,3 +71,5 @@ describe('test-no-self-tracing', function() {
     });
   });
 });
+
+export default {};

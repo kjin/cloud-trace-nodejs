@@ -64,3 +64,5 @@ describe('express + mongo with trace options header + sampling', function() {
     });
   });
 });
+
+export default {};

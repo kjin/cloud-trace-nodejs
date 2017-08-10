@@ -73,3 +73,5 @@ function sendRequests(agent, options, expectedTraceCount, done) {
     });
   });
 }
+
+export default {};

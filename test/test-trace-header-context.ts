@@ -131,3 +131,5 @@ describe('test-trace-header-context', function() {
     });
   });
 });
+
+export default {};

@@ -199,3 +199,5 @@ function buildKoa2App() {
   });
   return app;
 }
+
+export default {};

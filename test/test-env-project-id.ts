@@ -33,3 +33,5 @@ describe('should respect environment variables', function() {
     assert.equal(agent.config_.projectId, 1729);
   });
 });
+
+export default {};

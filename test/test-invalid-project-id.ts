@@ -31,3 +31,5 @@ describe('index.js', function() {
     assert(!agent.isActive());
   });
 });
+
+export default {};

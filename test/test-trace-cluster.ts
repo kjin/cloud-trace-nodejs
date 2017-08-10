@@ -59,3 +59,5 @@ describe('test-trace-cluster', function() {
 function expressPredicate(span) {
   return span.name === '/';
 }
+
+export default {};

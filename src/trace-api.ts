@@ -273,3 +273,5 @@ TraceAgent.prototype.constants = constants;
 TraceAgent.prototype.labels = TraceLabels;
 
 module.exports = TraceAgent;
+
+export default {};

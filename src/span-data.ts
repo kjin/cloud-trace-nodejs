@@ -150,3 +150,5 @@ function StackFrame(className, methodName, fileName, lineNumber, columnNumber) {
  * Export SpanData.
  */
 module.exports = SpanData;
+
+export default {};

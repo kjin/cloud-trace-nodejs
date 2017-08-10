@@ -163,3 +163,5 @@ describe('util.generateTraceContext', function() {
     assert.equal(context, '');
   });
 });
+
+export default {};

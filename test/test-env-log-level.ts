@@ -66,3 +66,5 @@ describe('should respect environment variables', function() {
     assert.strictEqual(logLevel, gcloudCommon.logger.LEVELS[5]);
   });
 });
+
+export default {};

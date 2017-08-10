@@ -774,3 +774,5 @@ function grpcServerOuterPredicate(span) {
 function grpcServerInnerPredicate(span) {
   return span.kind === 'RPC_CLIENT' && span.name === 'inner';
 }
+
+export default {};

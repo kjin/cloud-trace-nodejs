@@ -94,3 +94,5 @@ module.exports = [{
     patch: patchModuleRoot,
     unpatch: unpatchModuleRoot
 }];
+
+export default {};

@@ -70,3 +70,5 @@ if (semver.satisfies(process.version, '>=4')) {
     });
   });
 }
+
+export default {};

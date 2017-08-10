@@ -56,3 +56,5 @@ module.exports = [
     unpatch: unpatchClient
   }
 ];
+
+export default {};

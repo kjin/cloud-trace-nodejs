@@ -296,3 +296,5 @@ function expressPredicate(span) {
 function expressParamPredicate(span) {
   return span.name === '/:id';
 }
+
+export default {};

@@ -438,3 +438,5 @@ describe('Trace Plugin Loader', function() {
       'Warn when plugin has both patch and no unpatch');
   });
 });
+
+export default {};

@@ -302,3 +302,5 @@ describe('restify', function() {
 function restifyPredicate(span) {
   return span.name === '/';
 }
+
+export default {};

@@ -74,3 +74,5 @@ module.exports = {
   instanceId: nockInstanceId,
   hostname: nockHostname
 };
+
+export default {};

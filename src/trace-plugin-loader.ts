@@ -201,3 +201,5 @@ module.exports = {
   activate: activate,
   deactivate: deactivate
 };
+
+export default {};

@@ -123,3 +123,5 @@ describe('index.js', function() {
     wrapTest(restify, 'createServer');
   });
 });
+
+export default {};

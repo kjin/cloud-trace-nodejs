@@ -152,3 +152,5 @@ module.exports = {
   findModulePath: findModulePath,
   findModuleVersion: findModuleVersion
 };
+
+export default {};

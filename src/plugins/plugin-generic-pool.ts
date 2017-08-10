@@ -32,3 +32,5 @@ module.exports = [
     patch: wrapModuleRoot2
   }
 ];
+
+export default {};

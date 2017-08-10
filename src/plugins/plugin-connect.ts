@@ -88,3 +88,5 @@ module.exports = [
   }
 ];
 
+
+export default {};

@@ -88,3 +88,5 @@ describe('tracewriter publishing', function() {
     });
   });
 });
+
+export default {};

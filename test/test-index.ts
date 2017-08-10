@@ -79,3 +79,5 @@ describe('index.js', function() {
     }, 500);
   });
 });
+
+export default {};
