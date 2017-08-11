@@ -37,8 +37,9 @@ var shimmer = require('shimmer');
 var TraceAgent = require('../../src/trace-api.js');
 var testTraceAgent;
 shimmer.wrap(trace, 'start', function(original) {
-  return function() {
-    var result = original.apply(this, arguments);
+  return function(config) {
+    config._forceNewAgent = true;
+    var result = original.call(this, config);
     testTraceAgent = new TraceAgent('test');
     testTraceAgent.enable(logger(), {
       enhancedDatabaseReporting: false,
