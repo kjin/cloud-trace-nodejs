@@ -1,69 +1,176 @@
-/**
- * Copyright 2017 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-'use strict';
-
-require('source-map-support').install();
-
 const del = require('del');
 const gulp = require('gulp');
-const merge = require('merge2');
+const debug = require('gulp-debug');
+const mocha = require('gulp-mocha');
 const sourcemaps = require('gulp-sourcemaps');
-const spawn = require('child_process').spawn;
-const ts = require('gulp-typescript');
-const path = require('path');
-const process = require('process');
 const tslint = require('gulp-tslint');
-const clangFormat = require('clang-format');
-const format = require('gulp-clang-format');
+const typescript = require('gulp-typescript');
+const util = require('gulp-util');
+const merge2 = require('merge2');
+const path = require('path');
+const through = require('through2');
 
-const tsconfigPath = path.join(__dirname, 'tsconfig.json');
-const tslintPath = path.join(__dirname, 'tslint.json');
-const outDir = '.';
-const sources = ['src.ts/**/*.ts'];
+const tslintPath = './tslint.json';
+const tsconfigPath = './tsconfig.json';
+const outDir = 'build';
 
-let exitOnError = true;
-function onError() {
-  if (exitOnError) {
-    process.exit(1);
-  }
+function onError() {}
+
+// If --dev is passed, override certain ts config options
+let tsDevOptions = {};
+if (util.env.dev) {
+  tsDevOptions = {
+    allowUnreachableCode: true,
+    noUnusedParameters: false,
+    noImplicitAny: false,
+    noImplicitThis: false,
+    noEmitOnError: false
+  };
 }
 
-gulp.task('format', () => {
-  return gulp.src(sources, {base: '.'})
-      .pipe(format.format('file', clangFormat))
-      .pipe(gulp.dest('.'));
+/**
+ * Helper function that creates a gulp task function that opens files in a
+ * directory that match a certain glob pattern, transpiles them, and writes them
+ * to an output directory.
+ * @param {Object} globs
+ * @param {string=} globs.transpile The glob pattern for files to transpile.
+ *   Defaults to match all *.ts files in baseDir (incl. subdirectories).
+ * @param {string=} globs.copy The glob pattern for files to transpile.
+ *   Defaults to match all but *.ts files in baseDir (incl. subdirectories).
+ * @return A gulp task function.
+ */
+function makeCompileFn(globs) {
+  const transpileGlob = globs.transpile || '**/*.ts';
+  const copyGlob = globs.copy || '!(**/*)';
+  return () => {
+    const tsProject = typescript.createProject(tsconfigPath, tsDevOptions)();
+    const { dts, js } = gulp.src(transpileGlob, { base: '.' })
+      .pipe(debug())
+      .pipe(sourcemaps.init())
+      .pipe(tsProject)
+      .on('error', onError);
+    const jsmap = js.pipe(sourcemaps.write('.', {
+      includeContent: false,
+      sourceRoot: '..'
+    }));
+    const copy = gulp.src(copyGlob, { base: '.' });
+    return merge2([
+      js.pipe(gulp.dest(`${outDir}`)),
+      dts.pipe(gulp.dest(`${outDir}/types`)),
+      jsmap.pipe(gulp.dest(`${outDir}`)),
+      copy.pipe(gulp.dest(`${outDir}`))
+    ]);
+  };
+}
+
+/**
+ * Runs tslint on files in src/, with linting rules defined in tslint.json.
+ */
+gulp.task('lint', () => {
+  const program = require('tslint').Linter.createProgram(tsconfigPath);
+  gulp.src(['src/**/*.ts', 'test/**/*.ts'])
+    .pipe(tslint({
+      configuration: tslintPath,
+      formatter: 'prose',
+      program
+    }))
+    .pipe(tslint.report())
+    .on('warning', onError);
 });
 
 gulp.task('clean', () => {
-  return del(['build']);
+  return del(outDir);
 });
 
-gulp.task('compile', () => {
-  const tsResult = gulp.src(sources)
-                       .pipe(sourcemaps.init())
-                       .pipe(ts.createProject(tsconfigPath)())
-                       .on('error', onError);
-  return merge([
-    tsResult.dts.pipe(gulp.dest(`${outDir}/types`)),
-    tsResult.js
-        .pipe(sourcemaps.write(
-            '.', {includeContent: false, sourceRoot: '../../src'}))
-        .pipe(gulp.dest(`${outDir}/src`)),
-    tsResult.js.pipe(gulp.dest(`${outDir}/src`))
-  ]);
+/**
+ * Transpiles TypeScript files in src/ to JavaScript according to the settings
+ * found in tsconfig.json.
+ * Currently, all errors are emitted twice. This is being tracked here:
+ * https://github.com/ivogabe/gulp-typescript/issues/438
+ */
+gulp.task('compile', makeCompileFn({ transpile: ['*.ts', 'src/**/*.ts'] }));
+
+/**
+ * Transpiles TypeScript files in both src/ and test/.
+ */
+gulp.task('test.compile', ['compile'],
+  makeCompileFn({ transpile: ['test/*.ts', 'test/plugins/.ts'],
+    copy: ['test/**/fixtures'] }));
+
+/**
+ * Starts watching files in src/, running the 'compile' step whenever a file
+ * changes.
+ */
+gulp.task('watch', () => {
+  gulp.start(['compile']);
+  return gulp.watch(srcGlob, ['compile']);
 });
 
-gulp.task('default', ['compile']);
+/**
+ * Transpiles src/ and test/, and then runs all tests.
+ */
+gulp.task('test', 'test.compile', () => {
+  return gulp.src([`${outDir}/test/test-*.js`, `${outDir}/test/plugins/test-*.js`])
+    .pipe(mocha({
+      bail: true
+    }));
+});
+
+/**
+ * Compiles a single test file. Only intended as a pre-requisite for
+ * 'test.single'.
+ * @private
+ */
+gulp.task('.compileSingleTestFile', util.env.file ?
+  makeCompileFn({ transpile: path.relative('.', util.env.file) }) :
+  () => { throw new Error('No file specified'); });
+
+/**
+ * Run a single test, specified by its pre-transpiled source path (as supplied
+ * through the '--file' flag). This is intended to be used as part of a VS Code
+ * "Gulp task" launch configuration; setting the "args" field to
+ * ["test.single", "--file", "${file}"] makes it possible for one to debug the
+ * currently open TS mocha test file in one step.
+ */
+gulp.task('test.single', ['compile', '.compileSingleTestFile'], () => {
+  // util.env contains CLI arguments for the gulp task.
+  const { file } = util.env;
+  // Determine the path to the transpiled version of this TS file.
+  const dir = path.dirname(path.relative('.', file));
+  const basename = path.basename(file, '.ts');
+  const transpiledPath = `${outDir}/${dir}/${basename}.js`;
+  // Construct an instance of Mocha's runner API and feed it the path to the
+  // transpiled source.
+  return gulp.src(transpiledPath)
+    .pipe(through.obj((file, enc, cb) => {
+      // Construct a new Mocha runner instance.
+      const Mocha = require('mocha');
+      const runner = new Mocha();
+      // Add the path to the test file to debug.
+      runner.addFile(file.path);
+      // Run the test suite.
+      runner.run((failures) => {
+        if (failures > 0) {
+          cb(new Error(`Mocha: ${failures} failures in ${file.path}]`));
+        } else {
+          cb(null);
+        }
+      });
+    }));
+});
+
+gulp.task('help', () => {
+  console.log(`
+gulp help: Prints this message.
+gulp clean: Deletes transpiled code.
+gulp compile: Transpiles src.
+gulp lint: Emits linting errors found in src/ and test/.
+gulp test.compile: Transpiles src and test.
+gulp test: Runs \`gulp test.compile\`, and then runs all tests.
+gulp test.single --file $FILE: Transpiles src and $FILE, and runs only the transpiled $FILE. (See also: #5)
+gulp * --color: Prints output in color; particularly useful for tests.
+gulp * --dev: Runs the task with relaxed TS compiler options.
+  `.trim());
+});
+
+gulp.task('default', ['help']);
