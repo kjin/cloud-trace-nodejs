@@ -19,7 +19,7 @@
 require('./plugins/common'/*.js*/);
 var assert = require('assert');
 var nock = require('nock');
-var nocks = require('./nocks.js');
+var nocks = require('./nocks'/*.js*/);
 var trace = require('..');
 var TraceAgent = require('../src/trace-api'/*.js*/);
 

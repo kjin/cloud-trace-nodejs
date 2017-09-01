@@ -23,7 +23,8 @@ var TraceLabels = require('../../src/trace-labels'/*.js*/);
 
 require('../..').start({ 
   projectId: '0',
-  samplingRate: 0
+  samplingRate: 0,
+  forceNewAgent_: true
 });
 
 var assert = require('assert');
