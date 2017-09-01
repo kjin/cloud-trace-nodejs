@@ -16,7 +16,7 @@ while true; do
 done
 
 # Lint
-jshint . || exit 1
+# jshint . || exit 1
 
 ./bin/install-test-fixtures.sh
 
@@ -32,7 +32,7 @@ function run {
 }
 
 # Run test/coverage
-for test in test/test-*.js test/plugins/*.js ;
+for test in build/test/test-*.js build/test/plugins/*.js ;
 do
 # not v0.12 or not koa = not (v0.12 and koa)
   if [[ ! $(node --version) =~ v0\.12\..* || ! "${test}" =~ .*trace\-(koa|google\-gax)\.js ]]
