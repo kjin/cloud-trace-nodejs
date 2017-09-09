@@ -196,6 +196,15 @@ function hasContext() {
   return !!cls.getRootContext();
 }
 
+function notNull<T>(arg: T | null) : T {
+  assert.notStrictEqual(arg, null);
+  if (arg === null) {
+    throw new Error();
+  } else {
+    return arg;
+  }
+}
+
 module.exports = {
   assertSpanDurationCorrect: assertSpanDurationCorrect,
   assertDurationCorrect: assertDurationCorrect,
@@ -215,7 +224,8 @@ module.exports = {
   serverRes: SERVER_RES,
   serverPort: SERVER_PORT,
   serverKey: SERVER_KEY,
-  serverCert: SERVER_CERT
+  serverCert: SERVER_CERT,
+  notNull
 };
 
 export default {};
