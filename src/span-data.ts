@@ -63,6 +63,7 @@ export class SpanData implements SpanDataInterface {
     const spanId = '' + (uid++);
     spanName =
         traceUtil.truncate(spanName, Constants.TRACE_SERVICE_SPAN_NAME_LIMIT);
+    
     this.span = new TraceSpan(spanName, spanId, parentSpanId);
     trace.spans.push(this.span);
     if (traceWriter.get().getConfig().stackTraceLimit > 0) {
@@ -106,6 +107,20 @@ export class SpanData implements SpanDataInterface {
           // undefined. Docs say undefined but we guard it here just in case.
           stackFrames.push(stackFrame);
         });
+        // Try to add the parent's stack trace as well.
+        const parentSpan = trace.spans.find(span => span.spanId === parentSpanId);
+        if (parentSpan) {
+          const parentTrace = JSON.parse(parentSpan.labels[TraceLabels.STACK_TRACE_DETAILS_KEY]);
+          if (parentTrace) {
+            // Add a dummy call stack frame.
+            // TODO: don't print node_modules cruft
+            '🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇\nasynchronous hop\n🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇🐇'.split('\n')
+              .forEach(line => stackFrames.push({
+                method_name: line
+              }));
+            stackFrames.push(...parentTrace.stack_frame);
+          }
+        }
         // Set the label on the trace span directly to bypass truncation to
         // config.maxLabelValueSize.
         this.span.setLabel(
