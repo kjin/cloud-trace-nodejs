@@ -97,6 +97,21 @@ module.exports = [
     unpatch: function(hapi) {
       shimmer.unwrap(hapi.Server.prototype, 'connection');
     }
+  },
+  {
+    file: '',
+    versions: '17',
+    patch: function(hapi, api) {
+      function createMiddleware() {}
+
+      shimmer.wrap(hapi, 'Server', function connectionWrap(connection) {
+        return function connectionTrace() {
+          var server = connection.apply(this, arguments);
+          server.ext('onRequest', createMiddleware());
+          return server;
+        };
+      });
+    }
   }
 ];
 

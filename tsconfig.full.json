@@ -8,7 +8,8 @@
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "noImplicitThis": false,
-    "noEmitOnError": false
+    "noEmitOnError": false,
+    "declaration": false
   },
   "include": [
     "src/**/*.ts",
