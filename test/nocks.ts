@@ -22,7 +22,7 @@ function accept() {
   return true;
 }
 
-function nockOAuth2(validator) {
+export function oauth2(validator?: Function) {
   validator = validator || accept;
   return nock('https://accounts.google.com')
       .post('/o/oauth2/token', validator)
@@ -34,28 +34,28 @@ function nockOAuth2(validator) {
       });
 }
 
-function nockProjectId(reply) {
+export function projectId(reply) {
   return nock('http://metadata.google.internal')
     .get('/computeMetadata/v1/project/project-id')
     .once()
     .reply(reply);
 }
 
-function nockInstanceId(reply) {
+export function instanceId(reply) {
   return nock('http://metadata.google.internal')
     .get('/computeMetadata/v1/instance/id')
     .once()
     .reply(reply);
 }
 
-function nockHostname(reply) {
+export function hostname(reply) {
   return nock('http://metadata.google.internal')
     .get('/computeMetadata/v1/instance/hostname')
     .once()
     .reply(reply);
 }
 
-function nockPatchTraces(project, validator, reply, withError) {
+export function patchTraces(project, validator, reply, withError) {
   validator = validator || accept;
   var scope = nock('https://cloudtrace.googleapis.com')
       .intercept('/v1/projects/' + project + '/traces', 'PATCH', validator);
@@ -66,13 +66,3 @@ function nockPatchTraces(project, validator, reply, withError) {
   }
   return scope;
 }
-
-module.exports = {
-  oauth2: nockOAuth2,
-  patchTraces: nockPatchTraces,
-  projectId: nockProjectId,
-  instanceId: nockInstanceId,
-  hostname: nockHostname
-};
-
-export default {};

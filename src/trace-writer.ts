@@ -24,7 +24,7 @@ import {SpanData} from './span-data';
 import {Trace} from './trace';
 import {TraceLabels} from './trace-labels';
 
-const pjson = require('../../package.json');
+let pjson = require('../../package.json');
 
 const onUncaughtExceptionValues = ['ignore', 'flush', 'flushAndExit'];
 

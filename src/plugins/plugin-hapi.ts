@@ -18,71 +18,75 @@
 var shimmer = require('shimmer');
 var urlParse = require('url').parse;
 
+function instrument(api, request, continueCb) {
+  var req = request.raw.req;
+  var res = request.raw.res;
+  var originalEnd = res.end;
+  var options = {
+    name: urlParse(req.url).pathname,
+    url: req.url,
+    traceContext: req.headers[api.constants.TRACE_CONTEXT_HEADER_NAME],
+    skipFrames: 3
+  };
+  return api.runInRootSpan(options, function(root) {
+    // Set response trace context.
+    var responseTraceContext =
+      api.getResponseTraceContext(options.traceContext, !!root);
+    if (responseTraceContext) {
+      res.setHeader(api.constants.TRACE_CONTEXT_HEADER_NAME, responseTraceContext);
+    }
+
+    if (!root) {
+      return continueCb();
+    }
+
+    api.wrapEmitter(req);
+    api.wrapEmitter(res);
+
+    var url = (req.headers['X-Forwarded-Proto'] || 'http') +
+    '://' + req.headers.host + req.url;
+  
+    // we use the path part of the url as the span name and add the full
+    // url as a label
+    // req.path would be more desirable but is not set at the time our middleware runs.
+    root.addLabel(api.labels.HTTP_METHOD_LABEL_KEY, req.method);
+    root.addLabel(api.labels.HTTP_URL_LABEL_KEY, url);
+    root.addLabel(api.labels.HTTP_SOURCE_IP, req.connection.remoteAddress);
+
+    // wrap end
+    res.end = function() {
+      res.end = originalEnd;
+      var returned = res.end.apply(this, arguments);
+
+      if (req.route && req.route.path) {
+        root.addLabel(
+          'hapi/request.route.path', req.route.path);
+      }
+      root.addLabel(
+          api.labels.HTTP_RESPONSE_CODE_LABEL_KEY, res.statusCode);
+      root.endSpan();
+
+      return returned;
+    };
+
+    // if the event is aborted, end the span (as res.end will not be called)
+    req.once('aborted', function() {
+      root.addLabel(api.labels.ERROR_DETAILS_NAME, 'aborted');
+      root.addLabel(api.labels.ERROR_DETAILS_MESSAGE, 'client aborted the request');
+      root.endSpan();
+    });
+
+    return continueCb();
+  });
+}
+
 module.exports = [
   {
     versions: '8 - 16',
     patch: function(hapi, api) {
       function createMiddleware() {
         return function middleware(request, reply) {
-          var req = request.raw.req;
-          var res = request.raw.res;
-          var originalEnd = res.end;
-          var options = {
-            name: urlParse(req.url).pathname,
-            url: req.url,
-            traceContext: req.headers[api.constants.TRACE_CONTEXT_HEADER_NAME],
-            skipFrames: 3
-          };
-          api.runInRootSpan(options, function(root) {
-            // Set response trace context.
-            var responseTraceContext =
-              api.getResponseTraceContext(options.traceContext, !!root);
-            if (responseTraceContext) {
-              res.setHeader(api.constants.TRACE_CONTEXT_HEADER_NAME, responseTraceContext);
-            }
-      
-            if (!root) {
-              return reply.continue();
-            }
-      
-            api.wrapEmitter(req);
-            api.wrapEmitter(res);
-      
-            var url = (req.headers['X-Forwarded-Proto'] || 'http') +
-            '://' + req.headers.host + req.url;
-          
-            // we use the path part of the url as the span name and add the full
-            // url as a label
-            // req.path would be more desirable but is not set at the time our middleware runs.
-            root.addLabel(api.labels.HTTP_METHOD_LABEL_KEY, req.method);
-            root.addLabel(api.labels.HTTP_URL_LABEL_KEY, url);
-            root.addLabel(api.labels.HTTP_SOURCE_IP, req.connection.remoteAddress);
-      
-            // wrap end
-            res.end = function() {
-              res.end = originalEnd;
-              var returned = res.end.apply(this, arguments);
-      
-              if (req.route && req.route.path) {
-                root.addLabel(
-                  'hapi/request.route.path', req.route.path);
-              }
-              root.addLabel(
-                  api.labels.HTTP_RESPONSE_CODE_LABEL_KEY, res.statusCode);
-              root.endSpan();
-      
-              return returned;
-            };
-      
-            // if the event is aborted, end the span (as res.end will not be called)
-            req.once('aborted', function() {
-              root.addLabel(api.labels.ERROR_DETAILS_NAME, 'aborted');
-              root.addLabel(api.labels.ERROR_DETAILS_MESSAGE, 'client aborted the request');
-              root.endSpan();
-            });
-      
-            return reply.continue();
-          });
+          return instrument(api, request, function() { reply.continue(); });
         };
       }
 
@@ -102,15 +106,22 @@ module.exports = [
     file: '',
     versions: '17',
     patch: function(hapi, api) {
-      function createMiddleware() {}
+      function createMiddleware() {
+        return function middleware(request, h) {
+          return instrument(api, request, function() { return h.continue; });
+        };
+      }
 
-      shimmer.wrap(hapi, 'Server', function connectionWrap(connection) {
+      function connectionWrap(connection) {
         return function connectionTrace() {
           var server = connection.apply(this, arguments);
           server.ext('onRequest', createMiddleware());
           return server;
         };
-      });
+      }
+
+      shimmer.wrap(hapi, 'Server', connectionWrap);
+      shimmer.wrap(hapi, 'server', connectionWrap);
     }
   }
 ];

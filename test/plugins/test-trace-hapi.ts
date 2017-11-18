@@ -26,15 +26,15 @@ var semver = require('semver');
 var server;
 
 var versions = {
-  // hapi8: './fixtures/hapi8',
-  // hapi9: './fixtures/hapi9',
-  // hapi10: './fixtures/hapi10',
-  // hapi11: './fixtures/hapi11',
-  // hapi12: './fixtures/hapi12',
-  // hapi13: './fixtures/hapi13',
-  // hapi14: './fixtures/hapi14',
-  // hapi15: './fixtures/hapi15',
-  // hapi16: './fixtures/hapi16',
+  hapi8: './fixtures/hapi8',
+  hapi9: './fixtures/hapi9',
+  hapi10: './fixtures/hapi10',
+  hapi11: './fixtures/hapi11',
+  hapi12: './fixtures/hapi12',
+  hapi13: './fixtures/hapi13',
+  hapi14: './fixtures/hapi14',
+  hapi15: './fixtures/hapi15',
+  hapi16: './fixtures/hapi16',
   hapi17: './fixtures/hapi17'
 };
 
