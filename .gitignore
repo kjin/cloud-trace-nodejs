@@ -5,5 +5,3 @@ coverage
 .vscode
 build/
 *.tgz
-src/plugins/types/*
-!src/plugins/types/index.d.ts
