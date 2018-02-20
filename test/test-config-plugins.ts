@@ -17,14 +17,21 @@
 import {Logger} from '@google-cloud/common';
 import * as assert from 'assert';
 
-import {defaultConfig} from '../src/config';
+import {defaultConfig, PluginConfigEntry} from '../src/config';
 import {PluginLoader, PluginLoaderConfig} from '../src/trace-plugin-loader';
 
 import * as trace from './trace';
 
 describe('Configuration: Plugins', () => {
+  function assertValidDefaultPlugin(e: string) {
+    assert.ok(Array.isArray(plugins![e]));
+    const plugin = plugins![e] as PluginConfigEntry[];
+    assert.strictEqual(plugin.length, 1);
+    assert.ok(plugin[0].path.includes(`plugin-${e}.js`));
+  }
+
   const instrumentedModules = Object.keys(defaultConfig.plugins);
-  let plugins: {[pluginName: string]: string}|null;
+  let plugins: {[pluginName: string]: string|PluginConfigEntry[]}|null;
 
   class ConfigTestPluginLoader extends PluginLoader {
     constructor(logger: Logger, config: PluginLoaderConfig) {
@@ -51,8 +58,7 @@ describe('Configuration: Plugins', () => {
     assert.strictEqual(
         JSON.stringify(Object.keys(plugins!)),
         JSON.stringify(instrumentedModules));
-    instrumentedModules.forEach(
-        e => assert.ok(plugins![e].includes(`plugin-${e}.js`)));
+    instrumentedModules.forEach(assertValidDefaultPlugin);
   });
 
   it('should handle empty object', () => {
@@ -61,8 +67,7 @@ describe('Configuration: Plugins', () => {
     assert.strictEqual(
         JSON.stringify(Object.keys(plugins!)),
         JSON.stringify(instrumentedModules));
-    instrumentedModules.forEach(
-        e => assert.ok(plugins![e].includes(`plugin-${e}.js`)));
+    instrumentedModules.forEach(assertValidDefaultPlugin);
   });
 
   it('should overwrite builtin plugins correctly', () => {
@@ -72,7 +77,7 @@ describe('Configuration: Plugins', () => {
         JSON.stringify(Object.keys(plugins!)),
         JSON.stringify(instrumentedModules));
     instrumentedModules.filter(e => e !== 'express')
-        .forEach(e => assert.ok(plugins![e].includes(`plugin-${e}.js`)));
+        .forEach(assertValidDefaultPlugin);
     assert.strictEqual(plugins!.express, 'foo');
   });
 });

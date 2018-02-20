@@ -19,6 +19,7 @@ import * as path from 'path';
 import * as hook from 'require-in-the-middle';
 import * as shimmer from 'shimmer';
 
+import {PluginConfigEntry} from '../src/config';
 import {PluginLoader} from '../src/trace-plugin-loader';
 
 import {TestLogger} from './logger';
@@ -26,7 +27,7 @@ import {TestLogger} from './logger';
 export interface SimplePluginLoaderConfig {
   // An object which contains paths to files that should be loaded as plugins
   // upon loading a module with a given name.
-  plugins: {[pluginName: string]: string};
+  plugins: {[pluginName: string]: string|PluginConfigEntry[]};
 }
 
 const SEARCH_PATH = `${__dirname}/fixtures/loader/node_modules`;
@@ -73,6 +74,8 @@ describe('Trace Plugin Loader', () => {
     assert.strictEqual(
         require('new-keyboard'), 'The QUICK BROWN FOX jumps over the LAZY DOG');
     assert.strictEqual(require('my-version-1.0'), '1.0.0');
+    assert.strictEqual(require('my-version-1.1'), '1.1.0');
+    assert.strictEqual(require('my-version-2.0'), '2.0.0');
   });
 
   it('doesn\'t patch before activation', () => {
@@ -171,13 +174,70 @@ describe('Trace Plugin Loader', () => {
     assert.strictEqual(require('small-number').value, 0);
   });
 
+  it('uses pre-load version ranges to determine plugin to load', () => {
+    makePluginLoader({
+      plugins:
+          {'my-version': [{versions: '2.x', path: 'plugin-my-version-2'}]}
+    }).activate();
+    assert.strictEqual(require('my-version-1.0'), '1.0.0');
+    assert.strictEqual(require('my-version-1.1'), '1.1.0');
+    assert.strictEqual(require('my-version-2.0'), '2.0.0-patched');
+    // warns for my-version-1.x that nothing matches
+    assert.strictEqual(logger.getNumLogsWith('warn', '[my-version@1.0.0]'), 1);
+    assert.strictEqual(logger.getNumLogsWith('warn', '[my-version@1.1.0]'), 1);
+  });
+
+  it('uses post-load version ranges to determine how to patch internals',
+     () => {
+       makePluginLoader({
+         plugins: {'my-version': [{path: 'plugin-my-version-1'}]}
+       }).activate();
+       assert.strictEqual(require('my-version-1.0'), '1.0.0-patched');
+       assert.strictEqual(require('my-version-1.1'), '1.1.0-patched');
+       assert.strictEqual(require('my-version-2.0'), '2.0.0');
+       // warns for my-version-2.0 that nothing matches
+       assert.strictEqual(
+           logger.getNumLogsWith('warn', '[my-version@2.0.0]'), 1);
+     });
+
+  it('can apply several plugins at once', () => {
+    makePluginLoader({
+      plugins: {
+        'my-version': [
+          {versions: '1.1.x', path: 'plugin-my-version-1'},
+          {versions: '2.x', path: 'plugin-my-version-2'}
+        ]
+      }
+    }).activate();
+    assert.strictEqual(require('my-version-1.0'), '1.0.0');
+    assert.strictEqual(require('my-version-1.1'), '1.1.0-patched');
+    assert.strictEqual(require('my-version-2.0'), '2.0.0-patched');
+    // warns for my-version-1.0 that nothing matches
+    assert.strictEqual(logger.getNumLogsWith('warn', '[my-version@1.0.0]'), 1);
+  });
+
   it('patches pre-releases, but warns', () => {
     makePluginLoader({
-      plugins: {'my-version': 'plugin-my-version-1'}
+      plugins:
+          {'my-version': [{versions: '1.0.0', path: 'plugin-my-version-1'}]}
     }).activate();
     assert.strictEqual(require('my-version-1.0-pre'), '1.0.0-pre-patched');
     assert.strictEqual(
         logger.getNumLogsWith('warn', '[my-version@1.0.0-pre]'), 1);
+  });
+
+  it('warns when a module is patched by multiple plugins', () => {
+    makePluginLoader({
+      plugins: {
+        'my-version':
+            [{path: 'plugin-my-version-1'}, {path: 'plugin-my-version-2'}]
+      }
+    }).activate();
+    try {
+      require('my-version-1.0');
+    } catch (e) {
+    }
+    assert.strictEqual(logger.getNumLogsWith('warn', '[my-version@1.0.0]'), 1);
   });
 
   it('warns when a module is patched by a non-conformant plugin', () => {
