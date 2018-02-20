@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-'use strict';
+import * as assert from 'assert';
+import * as cp from 'child_process';
+import * as path from 'path';
 
-var assert = require('assert');
-var cp = require('child_process');
-
-describe('modules loaded before agent', function() {
-  it('should log if modules were loaded before agent', function() {
-    var output =
-      cp.execSync('node test/fixtures/start-agent.js');
+describe('modules loaded before agent', () => {
+  it('should log if modules were loaded before agent', () => {
+    const scriptPath = [__dirname, 'fixtures', 'start-agent.js'].join(path.sep);
+    const output = cp.execSync(`node ${scriptPath}`);
     console.log(output.toString());
-    assert(output.toString().match(/Tracing might not work.*"glob".*/));
+    assert.ok(output.toString().match(/Tracing might not work.*"glob".*/));
   });
 });
-
-export default {};

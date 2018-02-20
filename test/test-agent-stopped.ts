@@ -22,6 +22,7 @@ var assert = require('assert');
 var http = require('http');
 var nock = require('nock');
 var trace = require('../..');
+var pluginLoader = require('../src/trace-plugin-loader').pluginLoader;
 
 describe('test-agent-stopped', function() {
   var agent;
@@ -45,6 +46,10 @@ describe('test-agent-stopped', function() {
 
   after(function() {
     process.env.GCLOUD_PROJECT = savedProject;
+  });
+
+  it('deactivates the plugin loader', () => {
+    assert.ok(!pluginLoader.get()!.isActive());
   });
 
   describe('express', function() {
