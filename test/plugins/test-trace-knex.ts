@@ -41,7 +41,6 @@ describe('test-trace-knex', function() {
   before(function() {
     agent = require('../../..').start({
       projectId: '0',
-      logLevel: 2,
       flushDelaySeconds: 1,
       enhancedDatabaseReporting: true,
       databaseResultReportingSize: RESULT_SIZE
@@ -193,13 +192,13 @@ describe('test-trace-knex', function() {
         });
       });
 
-      it('should perform basic transaction using ' + version, function(done) {
+      it('should perform basic transaction using ' + version, function() {
         var obj2 = {
           k: 2,
           v: 'obj2'
         };
-        common.runInTransaction(function(endRootSpan) {
-          knex.transaction(function(trx) {
+        return common.runInTransaction(function(endRootSpan) {
+          return knex.transaction(function(trx) {
             knex.insert(obj2)
                 .into(TABLE_NAME)
                 .transacting(trx)
@@ -224,7 +223,7 @@ describe('test-trace-knex', function() {
           }).catch(function(err) {
             assert.ok(err);
             assert.strictEqual(err.message, 'Rolling back');
-            knex.select()
+            return knex.select()
               .from(TABLE_NAME)
               .then(function(res) {
                 endRootSpan();
@@ -257,13 +256,10 @@ describe('test-trace-knex', function() {
                                   'ROLLBACK;',
                                   'select * from `t`'];
                 }
-                assert.equal(expectedCmds.length, spans.length);
+                assert.equal(spans.length, expectedCmds.length);
                 for (var i = 0; i < spans.length; i++) {
                   assert.equal(spans[i].labels.sql, expectedCmds[i]);
                 }
-                done();
-              }).catch(function(err) {
-                assert.ifError(err);
               });
           });
         });
