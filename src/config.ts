@@ -19,6 +19,10 @@ import * as path from 'path';
 const pluginDirectory =
     path.join(path.resolve(__dirname, '..'), 'src', 'plugins');
 
+export type PluginConfigEntry = {
+  versions?: string; path: string;
+};
+
 /** Available configuration options. */
 export interface Config {
   /**
@@ -54,7 +58,7 @@ export interface Config {
    * value. Disabling any of the default plugins may cause unwanted behavior,
    * so use caution.
    */
-  plugins?: {[pluginName: string]: string;};
+  plugins?: {[moduleName: string]: string|PluginConfigEntry[]};
 
   /**
    * The max number of frames to include on traces; pass a value of 0 to
@@ -172,22 +176,24 @@ export const defaultConfig = {
   maximumLabelValueSize: 512,
   plugins: {
     // enable all by default
-    'connect': path.join(pluginDirectory, 'plugin-connect.js'),
-    'express': path.join(pluginDirectory, 'plugin-express.js'),
-    'generic-pool': path.join(pluginDirectory, 'plugin-generic-pool.js'),
-    'grpc': path.join(pluginDirectory, 'plugin-grpc.js'),
-    'hapi': path.join(pluginDirectory, 'plugin-hapi.js'),
-    'http': path.join(pluginDirectory, 'plugin-http.js'),
-    'http2': path.join(pluginDirectory, 'plugin-http2.js'),
-    'https': path.join(pluginDirectory, 'plugin-https.js'),
-    'knex': path.join(pluginDirectory, 'plugin-knex.js'),
-    'koa': path.join(pluginDirectory, 'plugin-koa.js'),
-    'mongodb-core': path.join(pluginDirectory, 'plugin-mongodb-core.js'),
-    'mysql': path.join(pluginDirectory, 'plugin-mysql.js'),
-    'mysql2': path.join(pluginDirectory, 'plugin-mysql2.js'),
-    'pg': path.join(pluginDirectory, 'plugin-pg.js'),
-    'redis': path.join(pluginDirectory, 'plugin-redis.js'),
-    'restify': path.join(pluginDirectory, 'plugin-restify.js')
+    'connect': [{path: path.join(pluginDirectory, 'plugin-connect.js')}],
+    'express': [{path: path.join(pluginDirectory, 'plugin-express.js')}],
+    'generic-pool':
+        [{path: path.join(pluginDirectory, 'plugin-generic-pool.js')}],
+    'grpc': [{path: path.join(pluginDirectory, 'plugin-grpc.js')}],
+    'hapi': [{path: path.join(pluginDirectory, 'plugin-hapi.js')}],
+    'http': [{path: path.join(pluginDirectory, 'plugin-http.js')}],
+    'http2': [{path: path.join(pluginDirectory, 'plugin-http2.js')}],
+    'https': [{path: path.join(pluginDirectory, 'plugin-https.js')}],
+    'knex': [{path: path.join(pluginDirectory, 'plugin-knex.js')}],
+    'koa': [{path: path.join(pluginDirectory, 'plugin-koa.js')}],
+    'mongodb-core':
+        [{path: path.join(pluginDirectory, 'plugin-mongodb-core.js')}],
+    'mysql': [{path: path.join(pluginDirectory, 'plugin-mysql.js')}],
+    'mysql2': [{path: path.join(pluginDirectory, 'plugin-mysql2.js')}],
+    'pg': [{path: path.join(pluginDirectory, 'plugin-pg.js')}],
+    'redis': [{path: path.join(pluginDirectory, 'plugin-redis.js')}],
+    'restify': [{path: path.join(pluginDirectory, 'plugin-restify.js')}]
   },
   stackTraceLimit: 10,
   flushDelaySeconds: 30,

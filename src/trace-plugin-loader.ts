@@ -22,6 +22,7 @@ import * as semver from 'semver';
 import * as shimmer from 'shimmer';
 import * as util from './util';
 import * as builtinModules from 'builtin-modules';
+import {PluginConfigEntry} from './config';
 import {TraceAgent, TraceAgentConfig} from './trace-api';
 import {Patch, Plugin} from './plugin-types';
 import {Singleton} from './util';
@@ -29,18 +30,28 @@ import {Singleton} from './util';
 /**
  * Plugins are user-provided objects containing functions that should be run
  * when a module is loaded, with the intent of monkeypatching a module to be
- * loaded. Each plugin is specific to a module.
+ * loaded.
+ *
+ * Each plugin is specific to a module and version range ('*' by default),
+ * and loads for a module whose version is satisfied by the version range.
+ * There may be multiple plugins for a single module, though their version
+ * ranges should be mutually exclusive.
  *
  * Plugin objects are a list of load hooks, each of which consists
  * of a file path of a module-internal file to patch, a patch/intercept/hook
  * function, as well as the version range of the module for which that file
  * should be patched. (See ./plugin-types for the exact interface.)
+ *
+ * When writing plugins, a general rule of thumb is that different plugins
+ * should exist for large surface-level changes in a module. The intra-plugin
+ * version range exists to specify differences in monkeypatching based on
+ * module-internal changes.
  */
 
 export interface PluginLoaderConfig extends TraceAgentConfig {
   // An object which contains paths to files that should be loaded as plugins
   // upon loading a module with a given name.
-  plugins: {[pluginName: string]: string};
+  plugins: {[pluginName: string]: string|PluginConfigEntry[]};
 }
 
 /**
@@ -53,6 +64,7 @@ export interface PluginLoaderSingletonConfig extends PluginLoaderConfig {
 
 export interface PluginWrapperOptions {
   name: string;
+  versions: string;
   path: string;
 }
 
@@ -70,6 +82,9 @@ export class PluginWrapper {
   private traceConfig: TraceAgentConfig;
   // Display-friendly name of the module being patched by this plugin.
   private name: string;
+  // A semver string representing the range of module versions for which this
+  // plugin will be _loaded into memory_.
+  private versions: string;
   // The path to the plugin.
   private path: string;
   // The exported value of the plugin, or NOT_LOADED if it hasn't been
@@ -88,6 +103,7 @@ export class PluginWrapper {
       traceConfig: TraceAgentConfig) {
     this.logger = logger;
     this.name = options.name;
+    this.versions = options.versions;
     this.path = options.path;
     this.traceConfig = traceConfig;
   }
@@ -98,20 +114,24 @@ export class PluginWrapper {
    * @param version A semver version string.
    */
   isSupported(version: string): boolean {
-    // The plugin is lazily loaded here.
-    const plugin = this.getPluginExportedValue();
-    // Count the number of Patch/Intercept objects with compatible version
-    // ranges
-    let numFiles = 0;
-    plugin.forEach(instrumentation => {
-      const postLoadVersions = instrumentation.versions;
-      if (!postLoadVersions || semver.satisfies(version, postLoadVersions)) {
-        numFiles++;
-      }
-    });
-    // We consider a module to be unsupported if there are no Patch/Intercept
-    // objects with compatible version ranges at all.
-    return numFiles > 0;
+    // Check the plugin pre-load version.
+    if (semver.satisfies(version, this.versions)) {
+      // The plugin is lazily loaded here.
+      const plugin = this.getPluginExportedValue();
+      // Count the number of Patch/Intercept objects with compatible version
+      // ranges
+      let numFiles = 0;
+      plugin.forEach(instrumentation => {
+        const postLoadVersions = instrumentation.versions;
+        if (!postLoadVersions || semver.satisfies(version, postLoadVersions)) {
+          numFiles++;
+        }
+      });
+      // We consider a module to be unsupported if there are no Patch/Intercept
+      // objects with compatible version ranges at all.
+      return numFiles > 0;
+    }
+    return false;
   }
 
   /**
@@ -239,7 +259,8 @@ export class PluginLoader {
     // Also, coalesce all plugins which are keyed on a built-in module name,
     // because they each have the capability to patch any core module.
     const canonicalPlugins:
-        {[pluginName: string]: string[];} = {[PluginLoader.CORE_MODULE]: []};
+        {[pluginName: string]:
+             PluginConfigEntry[];} = {[PluginLoader.CORE_MODULE]: []};
 
     Object.keys(config.plugins).forEach(key => {
       const value = config.plugins[key];
@@ -252,15 +273,19 @@ export class PluginLoader {
         canonicalPlugins[key] = [];
       }
 
-      if (value) {
+      if (Array.isArray(value)) {
+        // Directly add PluginConfigEntry values into canonicalPlugins
+        // (unless they are falsey).
+        value.filter(v => v.path).forEach(v => canonicalPlugins[key].push(v));
+      } else if (value) {
         if (typeof value === 'string') {
           // Convert the given string value to a PluginConfigEntry
           // (unless it's falsey).
           // TODO: Begin on the path of deprecating this?
-          canonicalPlugins[key].push(value);
+          canonicalPlugins[key].push({path: value});
         } else {
           this.logger.error(`PluginLoader#constructor: [${
-              key}] Value is not a string... ignoring.`);
+              key}] Value is not an array of PluginConfigEntry objects or a string... ignoring.`);
         }
       }
     });
@@ -277,9 +302,12 @@ export class PluginLoader {
       // a module with the given name (as key) is loaded.
       this.pluginMap.set(
           key,
-          value.map(
-              value =>
-                  new PluginWrapper(logger, {name: key, path: value}, config)));
+          value.filter(v => v.path)
+              .map(
+                  v => new PluginWrapper(
+                      logger,
+                      {name: key, versions: v.versions || '*', path: v.path},
+                      config)));
     });
 
     // Eagerly load the plugin for core modules.
