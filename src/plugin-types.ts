@@ -180,18 +180,11 @@ export interface TraceAgent {
 }
 
 export interface Patch<T> {
-  file?: string;
-  versions?: string;
+  file: string;
+  versions: string;
   patch: (module: T, agent: TraceAgent) => void;
-  unpatch?: (module: T) => void;
-}
-
-export interface Intercept<T> {
-  file?: string;
-  versions?: string;
   intercept: (module: T, agent: TraceAgent) => T;
+  unpatch: (module: T) => void;
 }
 
-export type Instrumentation<T> = Patch<T>|Intercept<T>;
-
-export type Plugin = Array<Instrumentation<any>>;
+export type Plugin = Array<Partial<Patch<any>>>;

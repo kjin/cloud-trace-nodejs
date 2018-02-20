@@ -100,6 +100,6 @@ const plugin: PluginTypes.Plugin = [{
       return app;
     };
   }
-} as PluginTypes.Intercept<Connect3>];
+} as PluginTypes.Patch<Connect3>];
 
 export = plugin;
