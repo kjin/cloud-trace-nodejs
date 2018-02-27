@@ -18,7 +18,10 @@
 
 import * as assert from 'assert';
 
-import {TraceSpan} from '../src/trace-span';
+import {SpanDataType} from '../src/constants';
+import {SpanData} from '../src/plugin-types';
+import {BaseSpanData} from '../src/span-data';
+import {TraceSpan} from '../src/trace';
 
 /**
  * Constants
@@ -38,17 +41,22 @@ export function isServerSpan(span: TraceSpan) {
 }
 
 // Convenience function that, when awaited, stalls for a given duration of time
-export function wait (ms: number) {
+export function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Assert that the given span's duration is within the given range.
 export function assertSpanDuration(span: TraceSpan, bounds: [number, number]) {
-      const spanDuration =
-          Date.parse(span.endTime) - Date.parse(span.startTime);
-      assert.ok(
-          spanDuration >= bounds[0] && spanDuration <= bounds[1],
-          `Span duration of ${
-              spanDuration} ms is not in the acceptable expected range of [${
-              bounds[0]}, ${bounds[1]}] ms`);
-    }
+  const spanDuration = Date.parse(span.endTime) - Date.parse(span.startTime);
+  assert.ok(
+      spanDuration >= bounds[0] && spanDuration <= bounds[1],
+      `Span duration of ${
+          spanDuration} ms is not in the acceptable expected range of [${
+          bounds[0]}, ${bounds[1]}] ms`);
+}
+
+export function asBaseSpanData(arg: SpanData): BaseSpanData {
+  assert.notStrictEqual(arg.type, SpanDataType.UNCORRELATED);
+  assert.notStrictEqual(arg.type, SpanDataType.UNTRACED);
+  return arg as BaseSpanData;
+}

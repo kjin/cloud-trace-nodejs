@@ -21,6 +21,8 @@ import { TraceLabels } from '../../src/trace-labels';
 import * as TracingPolicy from '../../src/tracing-policy';
 import * as util from '../../src/util';
 import * as assert from 'assert';
+import { asBaseSpanData } from '../utils';
+import { SpanData } from '../../src/plugin-types';
 
 var shimmer = require('shimmer');
 var common = require('./common'/*.js*/);
@@ -52,8 +54,8 @@ function checkServerMetadata(metadata) {
     assert.ok(/[a-f0-9]{32}\/[0-9]+;o=1/.test(traceContext));
     var parsedContext = util.parseContextFromHeader(traceContext);
     assert.ok(parsedContext);
-    var root = cls.getNamespace().get('root');
-    assert.strictEqual(root.span.parentSpanId, common.notNull(parsedContext).spanId);
+    var root = asBaseSpanData(cls.getRootContext() as SpanData);
+    assert.strictEqual(root.span.parentSpanId, parsedContext!.spanId);
   }
 }
 
@@ -293,9 +295,7 @@ Object.keys(versions).forEach(function(version) {
         var result = oldRegister.call(this, n, h, s, d, m);
         var oldFunc = this.handlers[n].func;
         this.handlers[n].func = function() {
-          if (cls.getRootContext()) {
-            cls.setRootContext(null);
-          }
+          cls.clearRootContext();
           return oldFunc.apply(this, arguments);
         };
         return result;
@@ -451,7 +451,7 @@ Object.keys(versions).forEach(function(version) {
     it('should support distributed trace context', function(done) {
       function makeLink(fn, meta, next) {
         return function() {
-          cls.setRootContext(null);
+          cls.clearRootContext();
           common.runInTransaction(function(terminate) {
             fn(client, grpc, meta, function() {
               terminate();
@@ -516,7 +516,7 @@ Object.keys(versions).forEach(function(version) {
                 // Clear root context so the next call to runInTransaction
                 // doesn't think we are still in one.
                 // TODO: Maybe we should do this automatically upon root.endSpan
-                cls.setRootContext(null);
+                cls.clearRootContext();
                 setImmediate(prevNext);
               }
             };
