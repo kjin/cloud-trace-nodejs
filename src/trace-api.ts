@@ -120,12 +120,6 @@ export class TraceAgent implements TraceAgentInterface {
     this.namespace = null;
   }
 
-  /**
-   * Returns whether the TraceAgent instance is active. This function is only
-   * for internal use and unit tests; under normal circumstances it will always
-   * return true.
-   * @private
-   */
   isActive(): boolean {
     return !!this.namespace;
   }

@@ -50,8 +50,11 @@ class TestTraceWriter extends TraceWriter {
     super(logger, config);
   }
   initialize(cb: (err?: Error) => void): void {
-    this.getConfig().projectId = '0';
-    cb();
+    if (!this.getConfig().projectId) {
+      cb(new Error('Project ID not found.'));
+    } else {
+      cb();
+    }
   }
   writeSpan(spanData: SpanData): void {
     if (!traces.has(spanData.trace.traceId)) {
@@ -75,7 +78,7 @@ traceWriter.create =
             throw new Error('Trace Writer already created.');
           }
           singleton = new TestTraceWriter(logger, config);
-          singleton.initialize(cb || (() => {}));
+          singleton.initialize((err) => cb && setImmediate(cb, err));
           return singleton;
         },
 
@@ -89,7 +92,10 @@ traceWriter.create =
 export type Predicate<T> = (value: T) => boolean;
 
 export function start(projectConfig?: Config): PluginTypes.TraceAgent {
-  const agent = trace.start(Object.assign({samplingRate: 0}, projectConfig));
+  const agent = trace.start(Object.assign({
+    samplingRate: 0,
+    projectId: '0'
+  }, projectConfig));
   return agent;
 }
 

@@ -73,58 +73,6 @@ describe('test-plugins-no-project-num', function(){
       });
     });
 
-    it('express', function(done) {
-      var http = require('http');
-      var express = require('./plugins/fixtures/express4');
-      var app = express();
-      var server;
-      app.get('/', function (req, res) {
-        res.send('hi');
-        server.close();
-        done();
-      });
-      server = app.listen(8081, function() {
-        http.get({ port: 8081 });
-      });
-    });
-
-    it('restify', function(done) {
-      var http = require('http');
-      var restify = require('./plugins/fixtures/restify4');
-      var server = restify.createServer();
-      server.get('/', function (req, res, next) {
-        res.writeHead(200, {
-          'Content-Type': 'text/plain'
-        });
-        res.write('hi');
-        res.end();
-        server.close();
-        done();
-      });
-      server.listen(8081, function() {
-        http.get({ port: 8081 });
-      });
-    });
-
-    it('hapi', function(done) {
-      var http = require('http');
-      var hapi = require('./plugins/fixtures/hapi8');
-      var server = new hapi.Server();
-      server.connection({ port: 8081 });
-      server.route({
-        method: 'GET',
-        path: '/',
-        handler: function(req, reply) {
-          reply('hi');
-          server.stop();
-          done();
-        }
-      });
-      server.start(function() {
-        http.get({ port: 8081 });
-      });
-    });
-
     it('http', function(done) {
       var req = require('http').get({ port: 8081 });
       req.on('error', function() {

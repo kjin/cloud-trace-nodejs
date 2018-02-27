@@ -87,6 +87,11 @@ export interface TraceAgent {
   enhancedDatabaseReportingEnabled(): boolean;
 
   /**
+   * Returns whether this TraceAgent instance is active.
+   */
+  isActive(): boolean;
+
+  /**
    * Runs the given function in a root span corresponding to an incoming
    * request, possibly passing it an object that exposes an interface for adding
    * labels and closing the span.

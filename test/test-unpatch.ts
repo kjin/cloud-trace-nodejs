@@ -75,20 +75,6 @@ describe('index.js', function() {
     wrapTest(http, 'request');
   });
 
-  it('should wrap/unwrap express on start/stop', function() {
-    var express = require('./plugins/fixtures/express4');
-    var patchedMethods = require('methods');
-    patchedMethods.push('use', 'route', 'param', 'all');
-    patchedMethods.forEach(function(method) {
-      wrapTest(express.application, method);
-    });
-  });
-
-  it('should wrap/unwrap hapi on start/stop', function() {
-    var hapi = require('./plugins/fixtures/hapi8');
-    wrapTest(hapi.Server.prototype, 'connection');
-  });
-
   it('should wrap/unwrap mongodb-core on start/stop', function() {
     var mongo = require('./plugins/fixtures/mongodb-core1');
     wrapTest(mongo.Server.prototype, 'command');
@@ -117,11 +103,6 @@ describe('index.js', function() {
     wrapTest(redis.RedisClient.prototype, 'create_stream');
     wrapTest(redis.RedisClient.prototype, 'internal_send_command');
     wrapTest(redis, 'createClient');
-  });
-
-  it('should wrap/unwrap restify on start/stop', function() {
-    var restify = require('./plugins/fixtures/restify4');
-    wrapTest(restify, 'createServer');
   });
 });
 
