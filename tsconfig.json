@@ -7,6 +7,7 @@
     "noEmitOnError": true
   },
   "include": [
+    "src/cls/*.ts",
     "src/*.ts",
     "src/plugins/plugin-connect.ts",
     "src/plugins/plugin-express.ts",

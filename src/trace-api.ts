@@ -19,7 +19,7 @@ import * as is from 'is';
 import * as semver from 'semver';
 import * as uuid from 'uuid';
 
-import * as cls from './cls';
+import { cls, ROOT_SPAN_STACK_OFFSET } from './cls';
 import {Constants, SpanDataType} from './constants';
 import {Func, RootSpanOptions, SpanData, SpanOptions, TraceAgent as TraceAgentInterface} from './plugin-types';
 import {ChildSpanData, RootSpanData, UNCORRELATED_SPAN, UNTRACED_SPAN} from './span-data';
@@ -66,7 +66,6 @@ export class TraceAgent implements TraceAgentInterface {
   private config: TraceAgentConfig|null = null;
   // TODO(kjin): Make this private.
   policy: TracingPolicy.TracePolicy|null = null;
-  private namespace: cls.Namespace|null = null;
 
   /**
    * Constructs a new TraceAgent instance.
@@ -90,7 +89,6 @@ export class TraceAgent implements TraceAgentInterface {
     this.logger = logger;
     this.config = config;
     this.policy = TracingPolicy.createTracePolicy(config);
-    this.namespace = cls.getNamespace();
   }
 
   /**
@@ -104,7 +102,6 @@ export class TraceAgent implements TraceAgentInterface {
     // they are already instantiated or the plugin doesn't unpatch them) to
     // short-circuit out of trace generation logic.
     this.policy = new TracingPolicy.TraceNonePolicy();
-    this.namespace = null;
   }
 
   /**
@@ -114,7 +111,7 @@ export class TraceAgent implements TraceAgentInterface {
    * @private
    */
   isActive(): boolean {
-    return !!this.namespace;
+    return !!cls.isEnabled();
   }
 
   enhancedDatabaseReportingEnabled(): boolean {
@@ -128,12 +125,12 @@ export class TraceAgent implements TraceAgentInterface {
 
     // TODO validate options
     // Don't create a root span if we are already in a root span
-    if (cls.getRootContext().type === SpanDataType.ROOT) {
+    if (cls.getContext().type === SpanDataType.ROOT) {
       this.logger!.warn(this.pluginName + ': Cannot create nested root spans.');
       return fn(UNCORRELATED_SPAN);
     }
 
-    return this.namespace!.runAndReturn(() => {
+    return cls.runWithNewContext(() => {
       // Attempt to read incoming trace context.
       let incomingTraceContext: IncomingTraceContext = {};
       if (isString(options.traceContext) && !this.config!.ignoreContextHeader) {
@@ -151,7 +148,7 @@ export class TraceAgent implements TraceAgentInterface {
           !!(incomingTraceContext.options &
              Constants.TRACE_OPTIONS_TRACE_ENABLED);
       if (!locallyAllowed || !remotelyAllowed) {
-        cls.setRootContext(UNTRACED_SPAN);
+        cls.setContext(UNTRACED_SPAN);
         return fn(UNTRACED_SPAN);
       }
 
@@ -163,8 +160,8 @@ export class TraceAgent implements TraceAgentInterface {
           {projectId: '', traceId, spans: []}, /* Trace object */
           options.name,                        /* Span name */
           parentId,                            /* Parent's span ID */
-          cls.ROOT_SPAN_STACK_OFFSET + (options.skipFrames || 0));
-      cls.setRootContext(rootContext);
+          ROOT_SPAN_STACK_OFFSET + (options.skipFrames || 0));
+      cls.setContext(rootContext);
       return fn(rootContext);
     });
   }
@@ -174,7 +171,7 @@ export class TraceAgent implements TraceAgentInterface {
       return null;
     }
 
-    const rootSpan = cls.getRootContext();
+    const rootSpan = cls.getContext();
     if (rootSpan.type === SpanDataType.ROOT) {
       return rootSpan.trace.traceId;
     }
@@ -194,7 +191,7 @@ export class TraceAgent implements TraceAgentInterface {
       return UNTRACED_SPAN;
     }
 
-    const rootSpan = cls.getRootContext();
+    const rootSpan = cls.getContext();
     if (rootSpan.type === SpanDataType.ROOT) {
       if (!!rootSpan.span.endTime) {
         // A closed root span suggests that we either have context confusion or
@@ -250,7 +247,7 @@ export class TraceAgent implements TraceAgentInterface {
       return fn;
     }
 
-    return this.namespace!.bind<T>(fn);
+    return cls.bindWithCurrentContext(fn);
   }
 
   wrapEmitter(emitter: NodeJS.EventEmitter): void {
@@ -258,6 +255,6 @@ export class TraceAgent implements TraceAgentInterface {
       return;
     }
 
-    this.namespace!.bindEmitter(emitter);
+    cls.bindEmitterWithCurrentContext(emitter);
   }
 }

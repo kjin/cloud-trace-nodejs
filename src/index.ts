@@ -23,7 +23,7 @@ if (require('semver').satisfies(process.version, '<8') ||
   require('continuation-local-storage');
 }
 
-import * as cls from './cls';
+import { cls } from './cls';
 import * as common from '@google-cloud/common';
 import {Constants} from './constants';
 import {Config, defaultConfig} from './config';
@@ -118,7 +118,7 @@ function stop() {
     traceWriter.get().stop();
     traceAgent.disable();
     pluginLoader.deactivate();
-    cls.destroyNamespace();
+    cls.disable();
   }
 }
 
@@ -161,7 +161,7 @@ export function start(projectConfig?: Config): PluginTypes.TraceAgent {
         JSON.stringify(modulesLoadedBeforeTrace));
   }
   // CLS namespace for context propagation
-  cls.createNamespace();
+  cls.enable();
   traceWriter.create(logger, config, (err) => {
     if (err) {
       stop();
