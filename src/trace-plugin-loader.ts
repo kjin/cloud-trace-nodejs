@@ -24,7 +24,7 @@ import * as util from './util';
 import * as builtinModules from 'builtin-modules';
 import {TraceAgent, TraceAgentConfig} from './trace-api';
 import {Patch, Plugin} from './plugin-types';
-import { Singleton } from './util';
+import {Singleton} from './util';
 
 /**
  * Plugins are user-provided objects containing functions that should be run

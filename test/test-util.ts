@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+import {Logger} from '@google-cloud/common';
 import * as assert from 'assert';
 import {inspect} from 'util';
 
 import {Constants} from '../src/constants';
 import * as util from '../src/util';
-import { Logger } from '@google-cloud/common';
-import { TestLogger } from './logger';
+
+import {TestLogger} from './logger';
 
 const notNull = <T>(x: T|null|undefined): T => {
   assert.notStrictEqual(x, null);
@@ -53,12 +54,13 @@ describe('Singleton', () => {
       assert.throws(() => singleton.create(logger, {}));
     });
 
-    it('creates a new instance when forceNewAgent_ is true in the config', () => {
-      const singleton = new util.Singleton(MyClass);
-      const createResult1 = singleton.create(logger, {});
-      const createResult2 = singleton.create(logger, { forceNewAgent_: true });
-      assert.notStrictEqual(createResult1, createResult2);
-    });
+    it('creates a new instance when forceNewAgent_ is true in the config',
+       () => {
+         const singleton = new util.Singleton(MyClass);
+         const createResult1 = singleton.create(logger, {});
+         const createResult2 = singleton.create(logger, {forceNewAgent_: true});
+         assert.notStrictEqual(createResult1, createResult2);
+       });
   });
 
   describe('get', () => {
@@ -76,7 +78,7 @@ describe('Singleton', () => {
     it('does not return a stale value', () => {
       const singleton = new util.Singleton(MyClass);
       singleton.create(logger, {});
-      const createResult = singleton.create(logger, { forceNewAgent_: true });
+      const createResult = singleton.create(logger, {forceNewAgent_: true});
       const getResult = singleton.get();
       assert.strictEqual(getResult, createResult);
     });

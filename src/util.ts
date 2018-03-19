@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import * as path from 'path';
 import {Logger} from '@google-cloud/common';  // for types only.
+import * as path from 'path';
 
 /**
  * Trace API expects stack frames to be a JSON string with the following
