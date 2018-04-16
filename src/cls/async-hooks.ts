@@ -41,16 +41,28 @@ export class AsyncHooksCLS<Context extends {}> implements CLS<Context> {
   private contexts: {[id: number]: Context} = {};
   private hook: asyncHooksModule.AsyncHook;
   private enabled = false;
+  private contextStack: Context[] = [];
 
   constructor(private readonly defaultContext: Context) {
     this.currentContext = {value: this.defaultContext};
     this.hook = (require('async_hooks') as AsyncHooksModule).createHook({
       init: (id: number, type: string, triggerId: number, resource: {}) => {
-        this.contexts[id] = this.currentContext.value;
+        if (type === 'PROMISE') {
+          this.contexts[id] = this.currentContext.value;
+        } else {
+          this.contexts[id] = this.contexts[triggerId];
+        }
       },
       before: (id: number) => {
         if (this.contexts[id]) {
+          this.contextStack.push(this.currentContext.value);
           this.currentContext.value = this.contexts[id];
+        }
+      },
+      after: (id: number) => {
+        if (this.contexts[id]) {
+          const prev = this.contextStack.pop();
+          this.currentContext.value = prev || this.defaultContext;
         }
       },
       destroy: (id: number) => {
