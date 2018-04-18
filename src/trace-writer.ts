@@ -26,7 +26,13 @@ import {SpanKind, Trace} from './trace';
 import {TraceLabels} from './trace-labels';
 import {Singleton} from './util';
 
-const pjson = require('../../package.json');
+let pjson: { name: string, version: string };
+try {
+  pjson = require('../../package.json');
+} catch (e) {
+  pjson = require('../package.json');
+}
+
 
 const onUncaughtExceptionValues = ['ignore', 'flush', 'flushAndExit'];
 
