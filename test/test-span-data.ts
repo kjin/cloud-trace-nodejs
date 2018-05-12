@@ -23,7 +23,7 @@ import {TraceLabels} from '../src/trace-labels';
 import {traceWriter, TraceWriter, TraceWriterConfig} from '../src/trace-writer';
 
 import {TestLogger} from './logger';
-import * as traceAgentModule from './trace';
+import * as testTraceModule from './trace';
 import {wait} from './utils';
 
 describe('SpanData', () => {
@@ -37,7 +37,7 @@ describe('SpanData', () => {
   let trace: Trace;
 
   before(() => {
-    traceAgentModule.setTraceWriter(CaptureSpanTraceWriter);
+    testTraceModule.setTraceWriter(CaptureSpanTraceWriter);
     traceWriter.create(
         {
           onUncaughtException: 'ignore',
@@ -48,7 +48,7 @@ describe('SpanData', () => {
   });
 
   after(() => {
-    traceAgentModule.setTraceWriter(traceAgentModule.TestTraceWriter);
+    testTraceModule.setTraceWriter(testTraceModule.TestTraceWriter);
   });
 
   beforeEach(() => {
