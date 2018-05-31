@@ -1,0 +1,569 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>&quot;config&quot; | @google-cloud/trace-agent</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">@google-cloud/trace-agent</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="_config_.html">&quot;config&quot;</a>
+				</li>
+			</ul>
+			<h1>External module &quot;config&quot;</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Interfaces</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-interface tsd-parent-kind-external-module"><a href="../interfaces/_config_.config.html" class="tsd-kind-icon">Config</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Type aliases</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="_config_.html#clsmechanism" class="tsd-kind-icon">CLSMechanism</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Object literals</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-object-literal tsd-parent-kind-external-module"><a href="_config_.html#defaultconfig" class="tsd-kind-icon">default<wbr>Config</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module">
+					<a name="clsmechanism" class="tsd-anchor"></a>
+					<h3>CLSMechanism</h3>
+					<div class="tsd-signature tsd-kind-icon">CLSMechanism<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"async-hooks"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"async-listener"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"auto"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"none"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"singular"</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L22">config.ts:22</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Object literals</h2>
+				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-external-module">
+					<a name="defaultconfig" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> default<wbr>Config</h3>
+					<div class="tsd-signature tsd-kind-icon">default<wbr>Config<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L192">config.ts:192</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Default configuration. For fields with primitive values, any user-provided
+								value will override the corresponding default value.
+								For fields with non-primitive values (plugins and serviceContext), the
+							user-provided value will be used to extend the default value.</p>
+						</div>
+					</div>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.buffersize" class="tsd-anchor"></a>
+						<h3>buffer<wbr>Size</h3>
+						<div class="tsd-signature tsd-kind-icon">buffer<wbr>Size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1000</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L220">config.ts:220</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.clsmechanism-1" class="tsd-anchor"></a>
+						<h3>cls<wbr>Mechanism</h3>
+						<div class="tsd-signature tsd-kind-icon">cls<wbr>Mechanism<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"async-hooks"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"async-listener"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"auto"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"none"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"singular"</span><span class="tsd-signature-symbol"> =&nbsp;&#x27;auto&#x27; as CLSMechanism</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L193">config.ts:193</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.enabled" class="tsd-anchor"></a>
+						<h3>enabled</h3>
+						<div class="tsd-signature tsd-kind-icon">enabled<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;true</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L195">config.ts:195</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.enhanceddatabasereporting" class="tsd-anchor"></a>
+						<h3>enhanced<wbr>Database<wbr>Reporting</h3>
+						<div class="tsd-signature tsd-kind-icon">enhanced<wbr>Database<wbr>Reporting<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;false</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L196">config.ts:196</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.flushdelayseconds" class="tsd-anchor"></a>
+						<h3>flush<wbr>Delay<wbr>Seconds</h3>
+						<div class="tsd-signature tsd-kind-icon">flush<wbr>Delay<wbr>Seconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;30</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L217">config.ts:217</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.ignorecontextheader" class="tsd-anchor"></a>
+						<h3>ignore<wbr>Context<wbr>Header</h3>
+						<div class="tsd-signature tsd-kind-icon">ignore<wbr>Context<wbr>Header<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;false</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L222">config.ts:222</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.ignoreurls" class="tsd-anchor"></a>
+						<h3>ignore<wbr>Urls</h3>
+						<div class="tsd-signature tsd-kind-icon">ignore<wbr>Urls<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> =&nbsp;[&#x27;/_ah/health&#x27;]</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L218">config.ts:218</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.loglevel" class="tsd-anchor"></a>
+						<h3>log<wbr>Level</h3>
+						<div class="tsd-signature tsd-kind-icon">log<wbr>Level<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L194">config.ts:194</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.maximumlabelvaluesize" class="tsd-anchor"></a>
+						<h3>maximum<wbr>Label<wbr>Value<wbr>Size</h3>
+						<div class="tsd-signature tsd-kind-icon">maximum<wbr>Label<wbr>Value<wbr>Size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;512</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L197">config.ts:197</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.onuncaughtexception" class="tsd-anchor"></a>
+						<h3>on<wbr>Uncaught<wbr>Exception</h3>
+						<div class="tsd-signature tsd-kind-icon">on<wbr>Uncaught<wbr>Exception<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;ignore&quot;</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L221">config.ts:221</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.samplingrate" class="tsd-anchor"></a>
+						<h3>sampling<wbr>Rate</h3>
+						<div class="tsd-signature tsd-kind-icon">sampling<wbr>Rate<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;10</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L219">config.ts:219</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.servicecontext" class="tsd-anchor"></a>
+						<h3>service<wbr>Context</h3>
+						<div class="tsd-signature tsd-kind-icon">service<wbr>Context<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L223">config.ts:223</a></li>
+							</ul>
+						</aside>
+						<div class="tsd-type-declaration">
+							<h4>Type declaration</h4>
+							<ul class="tsd-parameters">
+							</ul>
+						</div>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+						<a name="defaultconfig.stacktracelimit" class="tsd-anchor"></a>
+						<h3>stack<wbr>Trace<wbr>Limit</h3>
+						<div class="tsd-signature tsd-kind-icon">stack<wbr>Trace<wbr>Limit<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;10</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L216">config.ts:216</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal">
+						<a name="defaultconfig.plugins" class="tsd-anchor"></a>
+						<h3>plugins</h3>
+						<div class="tsd-signature tsd-kind-icon">plugins<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L198">config.ts:198</a></li>
+							</ul>
+						</aside>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.connect" class="tsd-anchor"></a>
+							<h3>connect</h3>
+							<div class="tsd-signature tsd-kind-icon">connect<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-connect.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L200">config.ts:200</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.express" class="tsd-anchor"></a>
+							<h3>express</h3>
+							<div class="tsd-signature tsd-kind-icon">express<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-express.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L201">config.ts:201</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.generic_pool" class="tsd-anchor"></a>
+							<h3>generic-<wbr>pool</h3>
+							<div class="tsd-signature tsd-kind-icon">generic-<wbr>pool<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-generic-pool.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L202">config.ts:202</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.grpc" class="tsd-anchor"></a>
+							<h3>grpc</h3>
+							<div class="tsd-signature tsd-kind-icon">grpc<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-grpc.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L203">config.ts:203</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.hapi" class="tsd-anchor"></a>
+							<h3>hapi</h3>
+							<div class="tsd-signature tsd-kind-icon">hapi<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-hapi.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L204">config.ts:204</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.http" class="tsd-anchor"></a>
+							<h3>http</h3>
+							<div class="tsd-signature tsd-kind-icon">http<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-http.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L205">config.ts:205</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.http2" class="tsd-anchor"></a>
+							<h3>http2</h3>
+							<div class="tsd-signature tsd-kind-icon">http2<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-http2.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L206">config.ts:206</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.knex" class="tsd-anchor"></a>
+							<h3>knex</h3>
+							<div class="tsd-signature tsd-kind-icon">knex<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-knex.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L207">config.ts:207</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.koa" class="tsd-anchor"></a>
+							<h3>koa</h3>
+							<div class="tsd-signature tsd-kind-icon">koa<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-koa.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L208">config.ts:208</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.mongodb_core" class="tsd-anchor"></a>
+							<h3>mongodb-<wbr>core</h3>
+							<div class="tsd-signature tsd-kind-icon">mongodb-<wbr>core<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-mongodb-core.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L209">config.ts:209</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.mysql" class="tsd-anchor"></a>
+							<h3>mysql</h3>
+							<div class="tsd-signature tsd-kind-icon">mysql<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-mysql.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L210">config.ts:210</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.mysql2" class="tsd-anchor"></a>
+							<h3>mysql2</h3>
+							<div class="tsd-signature tsd-kind-icon">mysql2<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-mysql2.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L211">config.ts:211</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.pg" class="tsd-anchor"></a>
+							<h3>pg</h3>
+							<div class="tsd-signature tsd-kind-icon">pg<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-pg.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L212">config.ts:212</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.redis" class="tsd-anchor"></a>
+							<h3>redis</h3>
+							<div class="tsd-signature tsd-kind-icon">redis<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-redis.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L213">config.ts:213</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
+							<a name="defaultconfig.plugins.restify" class="tsd-anchor"></a>
+							<h3>restify</h3>
+							<div class="tsd-signature tsd-kind-icon">restify<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;path.join(pluginDirectory, &#x27;plugin-restify.js&#x27;)</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/GoogleCloudPlatform/cloud-trace-nodejs/blob/6a024bc/src/config.ts#L214">config.ts:214</a></li>
+								</ul>
+							</aside>
+						</section>
+					</section>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_cls_.html">"cls"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_cls_async_hooks_.html">"cls/async-<wbr>hooks"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_cls_async_listener_.html">"cls/async-<wbr>listener"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_cls_base_.html">"cls/base"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_cls_null_.html">"cls/null"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_cls_singular_.html">"cls/singular"</a>
+					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="_config_.html">"config"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_constants_.html">"constants"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_index_.html">"index"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_plugin_types_.html">"plugin-<wbr>types"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_span_data_.html">"span-<wbr>data"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_trace_.html">"trace"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_trace_api_.html">"trace-<wbr>api"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_trace_labels_.html">"trace-<wbr>labels"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_trace_plugin_loader_.html">"trace-<wbr>plugin-<wbr>loader"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_trace_writer_.html">"trace-<wbr>writer"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_tracing_.html">"tracing"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_tracing_policy_.html">"tracing-<wbr>policy"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_util_.html">"util"</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="../interfaces/_config_.config.html" class="tsd-kind-icon">Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
+						<a href="_config_.html#clsmechanism" class="tsd-kind-icon">CLSMechanism</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-external-module">
+						<a href="_config_.html#defaultconfig" class="tsd-kind-icon">default<wbr>Config</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
