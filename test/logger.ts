@@ -36,10 +36,9 @@ export class TestLogger extends Logger {
   }
 
   private makeLoggerFn(logLevel: keyof Logger): LoggerFunction<this> {
-    // TODO(kjin): When we drop support for Node 4, use spread args.
     const that = this;
-    return function(this: null) {
-      const args = Array.prototype.slice.call(arguments, 0);
+    // tslint:disable-next-line:no-any
+    return function(this: null, ...args: any[]) {
       that.logs[logLevel].push(args.join(' '));
       that.innerLogger[logLevel].apply(this, args);
       return that;
