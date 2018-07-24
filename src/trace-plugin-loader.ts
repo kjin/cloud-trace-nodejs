@@ -20,7 +20,7 @@ import * as path from 'path';
 import * as hook from 'require-in-the-middle';
 import * as semver from 'semver';
 
-import {Intercept, Monkeypatch, Plugin} from './plugin-types';
+import {Intercept, Monkeypatch, Plugin, Patch, InstrumentationConstructor, Tracer, Instrumentation} from './plugin-types';
 import {StackdriverTracer, StackdriverTracerConfig} from './trace-api';
 import {Singleton} from './util';
 
@@ -74,6 +74,44 @@ export interface PluginWrapper {
    * @param version The module version.
    */
   applyPlugin<T>(moduleExports: T, file: string, version: string): T;
+}
+
+function old2New<T>(logger: Logger, logString: string, plugin: Array<Patch<any>>): InstrumentationConstructor<T> {
+  return class RootInstrumentation<T> implements Instrumentation<T> {
+    static children = plugin.map(<S>(patch: Partial<Monkeypatch<S>&Intercept<S>>) => class ChildInstrumentation implements Instrumentation<S> {
+      readonly file = patch.file;
+      readonly versions = patch.versions;
+
+      constructor(private readonly tracer: Tracer, private readonly version: string) {}
+
+      patch(exportedValue: S) {
+        if (patch.patch) {
+          patch.patch(exportedValue, this.tracer);
+          // The patch object should only have either patch() or intercept().
+          if (patch.intercept) {
+            logger.warn(`PluginWrapper#applyPlugin: [${
+                logString}] Patch object has both patch() and intercept() for this file. Only applying patch().`);
+          }
+        } else if (patch.intercept) {
+          exportedValue =
+              patch.intercept(exportedValue, this.tracer);
+        }
+        return exportedValue;
+      };
+      unpatch(exportedValue: S) {
+        // Queue a function to run if the plugin gets disabled.
+        if (patch.unpatch) {
+          patch.unpatch(exportedValue);
+        }
+        return exportedValue;
+      };
+    });
+
+    constructor(private readonly tracer: Tracer, private readonly version: string) {}
+
+    patch(r: T) { return r; };
+    unpatch(r: T) { return r; };
+  }
 }
 
 /**

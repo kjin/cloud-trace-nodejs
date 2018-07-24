@@ -229,6 +229,18 @@ export interface Tracer {
   };
 }
 
+export interface Instrumentation<T> {
+  patch(module: T): T;
+  unpatch(module: T): T;
+}
+
+export interface InstrumentationConstructor<T> {
+  readonly file?: string;
+  readonly versions?: string;
+  readonly children?: Array<InstrumentationConstructor<any>>;
+  new (tracer: Tracer, version: string): Instrumentation<T>;
+}
+
 export interface Monkeypatch<T> {
   file?: string;
   versions?: string;
@@ -244,4 +256,4 @@ export interface Intercept<T> {
 
 export type Patch<T> = Monkeypatch<T>|Intercept<T>;
 
-export type Plugin = Array<Patch<any>>;
+export type Plugin = Array<Patch<any>>|InstrumentationConstructor<any>;
