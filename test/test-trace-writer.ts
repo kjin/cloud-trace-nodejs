@@ -63,14 +63,16 @@ function mockNoMetadata() {
   };
 }
 
+let traceIdHighWater = 0;
 function createDummyTrace(): Trace {
+  const time = new Date().toString();
   return {
     projectId: '',
-    traceId: '',
+    traceId: `${traceIdHighWater++}`,
     spans: [{
       labels: {},
-      startTime: '',
-      endTime: '',
+      startTime: time,
+      endTime: time,
       kind: SpanKind.RPC_SERVER,
       name: '',
       spanId: ''
@@ -329,23 +331,45 @@ describe('Trace Writer', () => {
       writer.stop();
     });
 
+    it('amends existing buffered traces', async () => {
+      const NUM_SPANS = 5;
+      const writer = new MockedRequestTraceWriter(
+          Object.assign({}, DEFAULT_CONFIG, {bufferSize: 2}), logger);
+      await writer.initialize();
+      for (let i = 0; i < NUM_SPANS; i++) {
+        writer.writeTrace(Object.assign(createDummyTrace(), {traceId: 'same'}));
+      }
+      await wait(200);
+      // Didn't publish yet
+      assert.ok(!capturedRequestOptions);
+      // This one has a different trace ID.
+      writer.writeTrace(createDummyTrace());
+      await wait(200);
+      const publishedTraces: Trace[] =
+          JSON.parse(capturedRequestOptions!.body).traces;
+      assert.strictEqual(publishedTraces.length, 2);
+      assert.strictEqual(publishedTraces[0].spans.length, NUM_SPANS);
+      writer.stop();
+    });
+
     describe('condition for publishing traces', () => {
       it('is satisfied when the buffer is full', async () => {
-        const NUM_SPANS = 5;
+        const NUM_TRACES = 5;
         const writer = new MockedRequestTraceWriter(
-            Object.assign({}, DEFAULT_CONFIG, {bufferSize: NUM_SPANS}), logger);
+            Object.assign({}, DEFAULT_CONFIG, {bufferSize: NUM_TRACES}),
+            logger);
         await writer.initialize();
         writer.writeTrace(createDummyTrace());
         await wait(200);
         // Didn't publish yet
         assert.ok(!capturedRequestOptions);
-        for (let i = 1; i < NUM_SPANS; i++) {
+        for (let i = 1; i < NUM_TRACES; i++) {
           writer.writeTrace(createDummyTrace());
         }
         await wait(200);
         const publishedTraces: Trace[] =
             JSON.parse(capturedRequestOptions!.body).traces;
-        assert.strictEqual(publishedTraces.length, NUM_SPANS);
+        assert.strictEqual(publishedTraces.length, NUM_TRACES);
         writer.stop();
       });
 

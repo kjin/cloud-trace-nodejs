@@ -104,7 +104,7 @@ function cleanTraces() {
 }
 
 function getTraces() {
-  return traceWriter.get().buffer.map(buffer => JSON.parse(buffer));
+  return traceWriter.get().buffer;
 }
 
 function getMatchingSpan(predicate) {

@@ -60,7 +60,7 @@ export interface LabelObject {
  */
 export class TraceWriter extends common.Service {
   /** Stringified traces to be published */
-  buffer: string[];
+  buffer: Trace[];
   /** Default labels to be attached to written spans */
   defaultLabels: LabelObject;
   /** Reference to global unhandled exception handler */
@@ -221,54 +221,39 @@ export class TraceWriter extends common.Service {
   }
 
   /**
-   * Ensures that all sub spans of the provided Trace object are
-   * closed and then queues the span data to be published.
+   * Queues a trace to be published. Spans with no end time are excluded.
    *
    * @param trace The trace to be queued.
    */
   writeTrace(trace: Trace) {
-    for (const span of trace.spans) {
-      if (span.endTime === '') {
-        span.endTime = (new Date()).toISOString();
-      }
-    }
+    const publishableSpans = trace.spans.filter(span => !!span.endTime);
 
-    trace.spans.forEach(spanData => {
+    publishableSpans.forEach(spanData => {
       if (spanData.kind === SpanKind.RPC_SERVER) {
         // Copy properties from the default labels.
         Object.assign(spanData.labels, this.defaultLabels);
       }
     });
 
-    const afterProjectId = (projectId: string) => {
-      trace.projectId = projectId;
-      this.buffer.push(JSON.stringify(trace));
+    const existingTrace = this.buffer.find(
+        bufferedTrace => bufferedTrace.traceId === trace.traceId);
+    if (existingTrace) {
+      existingTrace.spans.push(...publishableSpans);
+      // This doesn't change the number of traces overall, so no extra logic
+      // needed.
+    } else {
+      this.buffer.push({
+        traceId: trace.traceId,
+        projectId: trace.projectId,
+        spans: publishableSpans
+      });
       this.logger.info(
           `TraceWriter#writeTrace: buffer.size = ${this.buffer.length}`);
-
-      // Publish soon if the buffer is getting big
       if (this.buffer.length >= this.config.bufferSize) {
         this.logger.info(
             'TraceWriter#writeTrace: Trace buffer full, flushing.');
         setImmediate(() => this.flushBuffer());
       }
-    };
-
-    // TODO(kjin): We should always be following the 'else' path.
-    // Any test that doesn't mock the Trace Writer will assume that traces get
-    // buffered synchronously. We need to refactor those tests to remove that
-    // assumption before we can make this fix.
-    if (this.projectId !== NO_PROJECT_ID_TOKEN) {
-      afterProjectId(this.projectId);
-    } else {
-      this.getProjectId().then(afterProjectId, (err: Error) => {
-        // Because failing to get a project ID means that the trace agent will
-        // get disabled, there is a very small window for this code path to be
-        // taken. For this reason we don't do anything more complex than just
-        // notifying that we are dropping the current trace.
-        this.logger.info(
-            'TraceWriter#queueTrace: No project ID, dropping trace.');
-      });
     }
   }
 
@@ -304,8 +289,29 @@ export class TraceWriter extends common.Service {
     // Privatize and clear the buffer.
     const buffer = this.buffer;
     this.buffer = [];
-    this.logger.debug('TraceWriter#flushBuffer: Flushing traces', buffer);
-    this.publish(`{"traces":[${buffer.join()}]}`);
+
+    const afterProjectId = (projectId: string) => {
+      buffer.forEach(trace => trace.projectId = projectId);
+      this.logger.debug('TraceWriter#flushBuffer: Flushing traces', buffer);
+      this.publish(JSON.stringify({traces: buffer}));
+    };
+
+    // TODO(kjin): We should always be following the 'else' path.
+    // Any test that doesn't mock the Trace Writer will assume that traces get
+    // buffered synchronously. We need to refactor those tests to remove that
+    // assumption before we can make this fix.
+    if (this.projectId !== NO_PROJECT_ID_TOKEN) {
+      afterProjectId(this.projectId);
+    } else {
+      this.getProjectId().then(afterProjectId, (err: Error) => {
+        // Because failing to get a project ID means that the trace agent will
+        // get disabled, there is a very small window for this code path to be
+        // taken. For this reason we don't do anything more complex than just
+        // notifying that we are dropping the current traces.
+        this.logger.info(
+            'TraceWriter#flushBuffer: No project ID, dropping traces.');
+      });
+    }
   }
 
   /**

@@ -114,6 +114,17 @@ export abstract class BaseSpanData implements Span {
  */
 export class RootSpanData extends BaseSpanData implements types.RootSpan {
   readonly type = SpanType.ROOT;
+  private children: ChildSpanData[] = [];
+  private overrideChildEndSpanHandler = function(
+      this: ChildSpanData, timestamp?: Date) {
+    ChildSpanData.prototype.endSpan.call(this, timestamp);
+    // Also, publish just this span.
+    traceWriter.get().writeTrace({
+      projectId: this.trace.projectId,
+      traceId: this.trace.traceId,
+      spans: [this.span]
+    });
+  };
 
   constructor(
       trace: Trace, spanName: string, parentSpanId: string,
@@ -125,16 +136,26 @@ export class RootSpanData extends BaseSpanData implements types.RootSpan {
   createChildSpan(options?: SpanOptions): Span {
     options = options || {name: ''};
     const skipFrames = options.skipFrames ? options.skipFrames + 1 : 1;
-    return new ChildSpanData(
+    const child = new ChildSpanData(
         this.trace,       /* Trace object */
         options.name,     /* Span name */
         this.span.spanId, /* Parent's span ID */
         skipFrames);      /* # of frames to skip in stack trace */
+    this.children.push(child);
+    return child;
   }
 
   endSpan(timestamp?: Date) {
     super.endSpan(timestamp);
     traceWriter.get().writeTrace(this.trace);
+    this.children.forEach(child => {
+      if (!child.span.endTime) {
+        // Child hasn't ended yet.
+        // Override the endSpan function to make it re-publish only itself.
+        child.endSpan = this.overrideChildEndSpanHandler;
+      }
+    });
+    this.children = [];
   }
 }
 
