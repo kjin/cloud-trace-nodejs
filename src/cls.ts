@@ -25,7 +25,7 @@ import { SingularCLS } from './cls/singular';
 import { SpanType } from './constants';
 import { Logger } from './logger';
 import { RootSpan } from './plugin-types';
-import { UNCORRELATED_ROOT_SPAN, UNTRACED_ROOT_SPAN } from './span-data';
+import { UNCORRELATED_ROOT_SPAN, DISABLED_ROOT_SPAN } from './span-data';
 import { Trace, TraceSpan } from './trace';
 import { Singleton } from './util';
 
@@ -104,7 +104,7 @@ export class TraceCLS implements CLS<RootContext> {
   private enabled = false;
 
   static UNCORRELATED: RootContext = UNCORRELATED_ROOT_SPAN;
-  static UNTRACED: RootContext = UNTRACED_ROOT_SPAN;
+  static UNTRACED: RootContext = DISABLED_ROOT_SPAN;
 
   /**
    * Stack traces are captured when a root span is started. Because the stack
