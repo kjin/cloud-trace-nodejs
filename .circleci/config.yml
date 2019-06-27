@@ -116,6 +116,8 @@ jobs:
   node8:
     environment:
       CODECOV_ENV: node8
+      TRACE_TEST_OVERWRITE_PLUGIN_TYPES: 1
+      TRACE_TEST_OVERWRITE_PLUGIN_FIXTURES: 1
     docker:
       - image: node:8
       - *mongo_service
@@ -126,6 +128,8 @@ jobs:
   node10:
     environment:
       CODECOV_ENV: node10
+      TRACE_TEST_OVERWRITE_PLUGIN_TYPES: 1
+      TRACE_TEST_OVERWRITE_PLUGIN_FIXTURES: 1
     docker:
       - image: node:10
       - *mongo_service
@@ -136,6 +140,8 @@ jobs:
   node11:
     environment:
       CODECOV_ENV: node11
+      TRACE_TEST_OVERWRITE_PLUGIN_TYPES: 1
+      TRACE_TEST_OVERWRITE_PLUGIN_FIXTURES: 1
     docker:
       - image: node:11
       - *mongo_service
@@ -144,6 +150,10 @@ jobs:
       - *mysql_service
     <<: *unit_tests
   node12:
+    environment:
+      CODECOV_ENV: node12
+      TRACE_TEST_OVERWRITE_PLUGIN_TYPES: 1
+      TRACE_TEST_OVERWRITE_PLUGIN_FIXTURES: 1
     docker:
       - image: node:12
       - *mongo_service

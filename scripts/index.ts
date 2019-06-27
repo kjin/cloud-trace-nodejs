@@ -10,6 +10,8 @@ const [, , ...steps] = process.argv;
 const {
   CIRCLE_PR_NUMBER,
   TRACE_TEST_EXCLUDE_INTEGRATION,
+  TRACE_TEST_OVERWRITE_PLUGIN_TYPES,
+  TRACE_TEST_OVERWRITE_PLUGIN_FIXTURES,
   TRACE_SYSTEM_TEST_ENCRYPTED_CREDENTIALS_KEY,
   TRACE_SYSTEM_TEST_ENCRYPTED_CREDENTIALS_IV
 } = process.env;
@@ -80,14 +82,13 @@ async function run(steps: string[]) {
             console.log('> Environment insufficient to decrypt service account credentials');
             break;
           }
-
           await decryptCredentials({ key, iv }, `${projectID}-${keyID}.json`);
           break;
         case 'get-plugin-types':
-          await getPluginTypes();
+          await getPluginTypes(!!TRACE_TEST_OVERWRITE_PLUGIN_TYPES);
           break;
         case 'init-test-fixtures':
-          await initTestFixtures(!TRACE_TEST_EXCLUDE_INTEGRATION);
+          await initTestFixtures(!TRACE_TEST_EXCLUDE_INTEGRATION, !!TRACE_TEST_OVERWRITE_PLUGIN_FIXTURES);
           break;
         case 'run-unit-tests':
           await runTests({

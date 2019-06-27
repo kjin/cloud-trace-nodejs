@@ -14,7 +14,7 @@ async function mkdirSafeP(dir: string) {
   }
 }
 
-export async function getPluginTypes() {
+export async function getPluginTypes(overwrite: boolean) {
   await mkdirSafeP(TYPES_DIRECTORY);
 
   const indexTs = (await readFileP(`${TYPES_DIRECTORY}/index.d.ts`, 'utf8') as string)
@@ -26,7 +26,7 @@ export async function getPluginTypes() {
     }
     const [, packageName, name, version] = matches;
     const installDir = `${TYPES_DIRECTORY}/${packageName}`;
-    if (await mkdirSafeP(installDir)) {
+    if (overwrite || await mkdirSafeP(installDir)) {
       await spawnP('npm', ['init', '-y'], {
         cwd: installDir
       });

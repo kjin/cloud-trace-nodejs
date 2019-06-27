@@ -7,7 +7,7 @@ import * as semver from 'semver';
 
 const readdirP: (path: string) => Promise<string[]> = promisify(readdir);
 
-export async function initTestFixtures(installPlugins: boolean) {
+export async function initTestFixtures(installPlugins: boolean, overwrite: boolean) {
   // Copy fixtures to build directory
   const fixtureDirectories = ['./test/fixtures'];
   for (const fixtureDirectory of fixtureDirectories) {
@@ -55,8 +55,10 @@ export async function initTestFixtures(installPlugins: boolean) {
     const packageFixture = packageFixtures[packageName];
     const supportedNodeVersions = (packageFixture.engines && packageFixture.engines.node) || '*';
     if (semver.satisfies(process.version, supportedNodeVersions)) {
-      if (!fixtureExists) {
-        await mkdirP(packageDirectory);
+      if (!fixtureExists || overwrite) {
+        if (!overwrite) {
+          await mkdirP(packageDirectory);
+        }
         await writeFileP(`${packageDirectory}/package.json`, JSON.stringify(Object.assign({
           name: packageName,
           version: '1.0.0',
